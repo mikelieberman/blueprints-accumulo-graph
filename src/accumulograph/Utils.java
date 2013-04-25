@@ -22,6 +22,9 @@ import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
+/**
+ * @author Mike Lieberman (http://mikelieberman.org)
+ */
 public final class Utils {
 
 	private static final Kryo KRYO = new Kryo();

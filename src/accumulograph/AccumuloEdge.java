@@ -14,6 +14,9 @@ import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Vertex;
 
+/**
+ * @author Mike Lieberman (http://mikelieberman.org)
+ */
 public class AccumuloEdge extends AccumuloElement implements Edge {
 
 	protected AccumuloVertex out;

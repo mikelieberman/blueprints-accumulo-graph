@@ -2,6 +2,9 @@ package accumulograph;
 
 import com.tinkerpop.blueprints.Features;
 
+/**
+ * @author Mike Lieberman (http://mikelieberman.org)
+ */
 public class AccumuloFeatures extends Features {
 
 	public AccumuloFeatures() {

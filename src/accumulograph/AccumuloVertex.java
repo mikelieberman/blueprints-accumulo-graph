@@ -18,6 +18,9 @@ import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.VertexQuery;
 import com.tinkerpop.blueprints.util.DefaultVertexQuery;
 
+/**
+ * @author Mike Lieberman (http://mikelieberman.org)
+ */
 public class AccumuloVertex extends AccumuloElement implements Vertex {
 
 	public AccumuloVertex(AccumuloGraph parent, Object id) {

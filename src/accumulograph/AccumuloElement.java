@@ -14,6 +14,9 @@ import accumulograph.Const.Type;
 
 import com.tinkerpop.blueprints.Element;
 
+/**
+ * @author Mike Lieberman (http://mikelieberman.org)
+ */
 public abstract class AccumuloElement implements Element {
 
 	protected AccumuloGraph parent;

@@ -4,6 +4,9 @@ import org.apache.accumulo.core.client.BatchWriter;
 import org.apache.accumulo.core.client.MutationsRejectedException;
 import org.apache.accumulo.core.data.Mutation;
 
+/**
+ * @author Mike Lieberman (http://mikelieberman.org)
+ */
 public class FlushedBatchWriter implements BatchWriter {
 
 	protected BatchWriter writer;
