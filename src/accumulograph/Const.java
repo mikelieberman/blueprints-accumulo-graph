@@ -13,14 +13,19 @@ public final class Const {
 	}
 	
 	// For Rexster configuration.
-	public static final String PREFIX = "properties.";
-	public static final String ZOOKEEPERS = PREFIX+"zookeepers";
-	public static final String INSTANCE = PREFIX+"instance";
-	public static final String USERNAME = PREFIX+"username";
-	public static final String PASSWORD = PREFIX+"password";
-	public static final String TABLE = PREFIX+"table";
-	public static final String AUTOFLUSH = PREFIX+"autoflush";
-	public static final String MOCK = PREFIX+"mock";
+	public static final String PREFIX = "AccumuloGraph";
+	public static final String ZOOKEEPERS = PREFIX+".zookeepers";
+	public static final String INSTANCE = PREFIX+".instance";
+	public static final String USERNAME = PREFIX+".username";
+	public static final String PASSWORD = PREFIX+".password";
+	public static final String GRAPHTABLE = PREFIX+".graphTable";
+	public static final String INDEXTABLE = PREFIX+".indexTable";
+	public static final String AUTOFLUSH = PREFIX+".autoflush";
+	public static final String MOCK = PREFIX+".mock";
+	public static final String RETURNREMOVEDPROPERTYVALUES =
+			PREFIX+".returnRemovedPropertyValues";
+	public static final String USEPROPERTYCACHE =
+			PREFIX+".usePropertyCache";
 	
 	// Types of Accumulo records.
 	public static enum Type {META, VERTEX, EDGE, PROP};

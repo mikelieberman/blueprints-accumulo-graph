@@ -56,5 +56,10 @@
 			<artifactId>hadoop-core</artifactId>
 			<version>1.0.4</version>
 		</dependency>
+		<dependency>
+			<groupId>com.tinkerpop.rexster</groupId>
+			<artifactId>rexster-core</artifactId>
+			<version>2.3.0</version>
+		</dependency>
 	</dependencies>
 </project>

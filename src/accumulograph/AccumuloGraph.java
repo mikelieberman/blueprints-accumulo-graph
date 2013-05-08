@@ -7,7 +7,6 @@ import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.BatchScanner;
 import org.apache.accumulo.core.client.BatchWriter;
-import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.client.MutationsRejectedException;
 import org.apache.accumulo.core.client.Scanner;
 import org.apache.accumulo.core.client.TableExistsException;
@@ -51,43 +50,28 @@ import com.tinkerpop.blueprints.util.DefaultGraphQuery;
  */
 public class AccumuloGraph implements Graph {
 
-	protected Connector conn;
-	protected String table;
-	protected boolean autoflush;
+	protected AccumuloGraphOptions opts;
 	protected Scanner scanner;
 	protected BatchScanner batchScanner;
 	protected BatchWriter writer;
-
+	
 	/**
 	 * Create a graph backed by Accumulo.
-	 * @param conn Accumulo Connector instance
-	 * @param table Table name
+	 * @param opts Graph options
 	 * @throws AccumuloException
 	 */
-	public AccumuloGraph(Connector conn, String table) throws AccumuloException {
-		this(conn, table, true);
-	}
-
-	/**
-	 * Create a graph backed by Accumulo.
-	 * @param conn Accumulo Connector instance
-	 * @param table Table name
-	 * @param autoflush Whether writes are flushed immediately
-	 * @throws AccumuloException
-	 */
-	public AccumuloGraph(Connector conn, String table,
-			boolean autoflush) throws AccumuloException {
+	public AccumuloGraph(AccumuloGraphOptions opts) throws AccumuloException {
+		validateOptions(opts);
+		
 		try {
-			this.conn = conn;
-			this.table = table;
-			this.autoflush = autoflush;
-
-			// Check whether table exists already and create if not.
-			TableOperations ops = conn.tableOperations();
-			if (!ops.exists(table)) {
-				ops.create(table);
+			this.opts = opts;
+			
+			createTableIfNotExists(opts.getGraphTable());
+			
+			if (opts.getIndexTable() != null) {
+				createTableIfNotExists(opts.getIndexTable());
 			}
-
+			
 			initScannersAndWriter();
 
 		} catch (TableNotFoundException e) {
@@ -98,27 +82,43 @@ public class AccumuloGraph implements Graph {
 			throw new AccumuloException(e);
 		}
 	}
+	
+	protected static void validateOptions(AccumuloGraphOptions opts) {
+		if (opts.getConnector() == null) {
+			throw new IllegalArgumentException("Connector not set");
+		} else if (opts.getGraphTable() == null) {
+			throw new IllegalArgumentException("Graph table not specified");
+		}
+	}
+	
+	protected void createTableIfNotExists(String table) throws AccumuloException, AccumuloSecurityException, TableExistsException {
+		// Check whether table exists already and create if not.
+		TableOperations ops = opts.getConnector().tableOperations();
+		if (!ops.exists(table)) {
+			ops.create(table);
+		}
+	}
 
 	protected void initScannersAndWriter() throws TableNotFoundException {
-		scanner = conn.createScanner(table, Constants.NO_AUTHS);
-		batchScanner = conn.createBatchScanner(table,
+		scanner = opts.getConnector().createScanner(opts.getGraphTable(), Constants.NO_AUTHS);
+		batchScanner = opts.getConnector().createBatchScanner(opts.getGraphTable(),
 				Constants.NO_AUTHS, 2);
 
-		writer = conn.createBatchWriter(table, 1000000L, 10L, 2);
-		if (autoflush) {
+		writer = opts.getConnector().createBatchWriter(opts.getGraphTable(), 1000000L, 10L, 2);
+		if (opts.getAutoflush()) {
 			writer = new FlushedBatchWriter(writer);
 		}
 	}
 
 	public void clear() throws AccumuloException {
 		try {
-			TableOperations ops = conn.tableOperations();
+			TableOperations ops = opts.getConnector().tableOperations();
 
-			if (ops.exists(table)) {
-				ops.delete(table);
+			if (ops.exists(opts.getGraphTable())) {
+				ops.delete(opts.getGraphTable());
 			}
 
-			ops.create(table);
+			ops.create(opts.getGraphTable());
 
 			initScannersAndWriter();
 
@@ -472,7 +472,7 @@ public class AccumuloGraph implements Graph {
 
 	@Override
 	public String toString() {
-		return getClass().getSimpleName().toLowerCase()+":"+table;
+		return getClass().getSimpleName().toLowerCase()+":"+opts.getGraphTable();
 	}
 
 	protected boolean containsElement(Type type, Object id) {

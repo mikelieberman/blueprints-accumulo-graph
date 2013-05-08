@@ -3,14 +3,6 @@ package accumulograph;
 import java.lang.reflect.Method;
 
 import org.apache.accumulo.core.client.AccumuloException;
-import org.apache.accumulo.core.client.AccumuloSecurityException;
-import org.apache.accumulo.core.client.Connector;
-import org.apache.accumulo.core.client.Instance;
-import org.apache.accumulo.core.client.TableExistsException;
-import org.apache.accumulo.core.client.TableNotFoundException;
-import org.apache.accumulo.core.client.admin.TableOperations;
-import org.apache.accumulo.core.client.mock.MockInstance;
-
 import com.tinkerpop.blueprints.EdgeTestSuite;
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.GraphTestSuite;
@@ -101,26 +93,14 @@ public class AccumuloGraphTest extends GraphTest {
 	@Override
 	public Graph generateGraph(String graphDirectoryName) {
 		try {
-			Instance instance = new MockInstance(graphDirectoryName);
-			Connector connector = instance.getConnector("", "".getBytes());
+			AccumuloGraphOptions opts = new AccumuloGraphOptions();
+			opts.setMock(true);
+			opts.setGraphTable(graphDirectoryName);
+			opts.setUsePropertyCache(true);
 
-			TableOperations ops = connector.tableOperations();
-
-			if (ops.exists(graphDirectoryName)) {
-				ops.delete(graphDirectoryName);
-			}
-
-			ops.create(graphDirectoryName);
-
-			return new AccumuloGraph(connector, graphDirectoryName);
+			return new AccumuloGraph(opts);
 
 		} catch (AccumuloException e) {
-			throw new RuntimeException(e);
-		} catch (AccumuloSecurityException e) {
-			throw new RuntimeException(e);
-		} catch (TableNotFoundException e) {
-			throw new RuntimeException(e);
-		} catch (TableExistsException e) {
 			throw new RuntimeException(e);
 		}
 	}

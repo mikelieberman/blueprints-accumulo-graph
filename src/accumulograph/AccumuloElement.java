@@ -88,7 +88,11 @@ public abstract class AccumuloElement implements Element {
 
 	@Override
 	public <T> T removeProperty(String key) {
-		T old = getProperty(key);
+		T old = null;
+		
+		if (parent.opts.getReturnRemovedPropertyValues()) {
+			old = getProperty(key);
+		}
 
 		removeProperties(key);
 
