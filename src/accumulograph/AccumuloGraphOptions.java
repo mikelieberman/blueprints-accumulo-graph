@@ -25,6 +25,11 @@ public class AccumuloGraphOptions {
 		return autoflush;
 	}
 
+	/**
+	 * Flush changes to Accumulo immediately, to avoid timing
+	 * issues on write operations, at the expense of performance.
+	 * @param autoflush
+	 */
 	public void setAutoflush(boolean autoflush) {
 		this.autoflush = autoflush;
 	}
@@ -33,6 +38,12 @@ public class AccumuloGraphOptions {
 		return mock;
 	}
 
+	/**
+	 * If true, use a mock instance of Accumulo.  Useful for testing
+	 * or if you don't have an Accumulo cluster lying around.
+	 * @param mock
+	 * @throws AccumuloException
+	 */
 	public void setMock(boolean mock) throws AccumuloException {
 		this.mock = mock;
 
@@ -45,6 +56,14 @@ public class AccumuloGraphOptions {
 		}
 	}
 
+	/**
+	 * Set Accumulo connector information
+	 * @param instance Instance name
+	 * @param zookeepers Zookeeper hosts
+	 * @param username Username
+	 * @param password Password
+	 * @throws AccumuloException
+	 */
 	public void setConnectorInfo(String instance, String zookeepers,
 			String username, String password) throws AccumuloException {
 		if (instance == null) {
@@ -66,6 +85,10 @@ public class AccumuloGraphOptions {
 		}
 	}
 
+	/**
+	 * Pass in an existing Accumulo connector.
+	 * @param connector The connector
+	 */
 	public void setConnector(Connector connector) {
 		if (connector == null) {
 			throw new IllegalArgumentException("Connector cannot be null");
@@ -81,6 +104,10 @@ public class AccumuloGraphOptions {
 		return graphTable;
 	}
 
+	/**
+	 * Set where to store the graph.
+	 * @param graphTable The table
+	 */
 	public void setGraphTable(String graphTable) {
 		if (graphTable == null) {
 			throw new IllegalArgumentException("Graph table cannot be null");
@@ -92,6 +119,11 @@ public class AccumuloGraphOptions {
 		return indexTable;
 	}
 
+	/**
+	 * Enables key/value indexing, and indicates
+	 * where to store the index.
+	 * @param indexTable The index table
+	 */
 	public void setIndexTable(String indexTable) {
 		this.indexTable = indexTable;
 	}
@@ -100,6 +132,12 @@ public class AccumuloGraphOptions {
 		return returnRemovedPropertyValues;
 	}
 
+	/**
+	 * If set to false, when removing properties, the
+	 * old property value is not returned.  This avoids
+	 * another read from Accumulo and increases performance.
+	 * @param returnRemovedPropertyValues Return values or not
+	 */
 	public void setReturnRemovedPropertyValues(boolean returnRemovedPropertyValues) {
 		this.returnRemovedPropertyValues = returnRemovedPropertyValues;
 	}
