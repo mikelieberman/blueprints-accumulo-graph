@@ -8,30 +8,6 @@ tweaks.  If indexing is enabled, the index is stored in a separate
 table.  Everything is serialized using Kryo.  I have not done serious
 performance testing, but it seems okay. :)
 
-The graph is stored in a single table with the following schema.
-
-<table>
-<tr><th>Row</th>        <th>CF</th>         <th>CQ</th>         <th>Val</th>        <th>Purpose</th></tr>
-<tr><td>MVERTEX</td>    <td>[v id]</td>     <td>-</td>          <td>-</td>          <td>Global vertex list</td></tr>
-<tr><td>[v id]</td>     <td>MVERTEX</td>    <td>-</td>          <td>-</td>          <td>Vertex id</td></tr>
-<tr><td>[v id]</td>     <td>EOUT</td>       <td>[e id]</td>     <td>[e label]</td>  <td>Vertex out-edge</td></tr>
-<tr><td>[v id]</td>     <td>EIN</td>        <td>[e id]</td>     <td>[e label]</td>  <td>Vertex in-edge</td></tr>
-<tr><td>MEDGE</td>      <td>[e id]</td>     <td>-</td>          <td>-</td>          <td>Global edge list</td></tr>
-<tr><td>[e id]</td>     <td>MEDGE</td>      <td>[e label]</td>  <td>-</td>          <td>Edge id</td></tr>
-<tr><td>[e id]</td>     <td>VOUT</td>       <td>[v id]</td>     <td>-</td>          <td>Edge out-vertex</td></tr>
-<tr><td>[e id]</td>     <td>VIN</td>        <td>[v id]</td>     <td>-</td>          <td>Edge in-vertex</td></tr>
-<tr><td>[v/e id]</td>   <td>PROP</td>       <td>[pname]</td>    <td>[pval]</td>     <td>Element property</td></tr>
-</table>
-
-If the index table is enabled, it has the following schema.
-
-<table>
-<tr><th>Row</th>        <th>CF</th>         <th>CQ</th>         <th>Val</th>    <th>Purpose</th></tr>
-<tr><td>PVLIST</td>     <td>[p name]</td>   <td>-</td>          <td>-</td>      <td>Vertex property list</td></tr>
-<tr><td>PELIST</td>     <td>[p name]</td>   <td>-</td>          <td>-</td>      <td>Edge property list</td></tr>
-<tr><td>[p name]</td>   <td>[p val]</td>    <td>[v/e id]</td>   <td>-</td>      <td>Property index</td></tr>
-</table>
-
 
 How to use it
 -------------
@@ -100,6 +76,34 @@ Todo
 * Bulk loading of graph elements.
 * Detailed benchmarking.
 * Documentation.
+
+
+Implementation details
+----------------------
+
+The graph is stored in a single table with the following schema.
+
+<table>
+<tr><th>Row</th>        <th>CF</th>         <th>CQ</th>         <th>Val</th>        <th>Purpose</th></tr>
+<tr><td>MVERTEX</td>    <td>[v id]</td>     <td>-</td>          <td>-</td>          <td>Global vertex list</td></tr>
+<tr><td>[v id]</td>     <td>MVERTEX</td>    <td>-</td>          <td>-</td>          <td>Vertex id</td></tr>
+<tr><td>[v id]</td>     <td>EOUT</td>       <td>[e id]</td>     <td>[e label]</td>  <td>Vertex out-edge</td></tr>
+<tr><td>[v id]</td>     <td>EIN</td>        <td>[e id]</td>     <td>[e label]</td>  <td>Vertex in-edge</td></tr>
+<tr><td>MEDGE</td>      <td>[e id]</td>     <td>-</td>          <td>-</td>          <td>Global edge list</td></tr>
+<tr><td>[e id]</td>     <td>MEDGE</td>      <td>[e label]</td>  <td>-</td>          <td>Edge id</td></tr>
+<tr><td>[e id]</td>     <td>VOUT</td>       <td>[v id]</td>     <td>-</td>          <td>Edge out-vertex</td></tr>
+<tr><td>[e id]</td>     <td>VIN</td>        <td>[v id]</td>     <td>-</td>          <td>Edge in-vertex</td></tr>
+<tr><td>[v/e id]</td>   <td>PROP</td>       <td>[pname]</td>    <td>[pval]</td>     <td>Element property</td></tr>
+</table>
+
+If the index table is enabled, it has the following schema.
+
+<table>
+<tr><th>Row</th>        <th>CF</th>         <th>CQ</th>         <th>Val</th>    <th>Purpose</th></tr>
+<tr><td>PVLIST</td>     <td>[p name]</td>   <td>-</td>          <td>-</td>      <td>Vertex property list</td></tr>
+<tr><td>PELIST</td>     <td>[p name]</td>   <td>-</td>          <td>-</td>      <td>Edge property list</td></tr>
+<tr><td>[p name]</td>   <td>[p val]</td>    <td>[v/e id]</td>   <td>-</td>      <td>Property index</td></tr>
+</table>
 
 
 =======
