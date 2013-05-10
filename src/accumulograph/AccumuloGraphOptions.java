@@ -28,7 +28,7 @@ public class AccumuloGraphOptions {
 	/**
 	 * Flush changes to Accumulo immediately, to avoid timing
 	 * issues on write operations, at the expense of performance.
-	 * @param autoflush
+	 * @param autoflush Autoflush
 	 */
 	public void setAutoflush(boolean autoflush) {
 		this.autoflush = autoflush;
@@ -57,7 +57,7 @@ public class AccumuloGraphOptions {
 	}
 
 	/**
-	 * Set Accumulo connector information
+	 * Set Accumulo connector information.
 	 * @param instance Instance name
 	 * @param zookeepers Zookeeper hosts
 	 * @param username Username
@@ -86,7 +86,7 @@ public class AccumuloGraphOptions {
 	}
 
 	/**
-	 * Pass in an existing Accumulo connector.
+	 * Use an existing Accumulo connector.
 	 * @param connector The connector
 	 */
 	public void setConnector(Connector connector) {
@@ -105,7 +105,7 @@ public class AccumuloGraphOptions {
 	}
 
 	/**
-	 * Set where to store the graph.
+	 * Set the table in which the graph will be stored.
 	 * @param graphTable The table
 	 */
 	public void setGraphTable(String graphTable) {
@@ -121,7 +121,7 @@ public class AccumuloGraphOptions {
 
 	/**
 	 * Enables key/value indexing, and indicates
-	 * where to store the index.
+	 * what table to store the index.
 	 * @param indexTable The index table
 	 */
 	public void setIndexTable(String indexTable) {
