@@ -96,7 +96,7 @@ public class AccumuloGraphTest extends GraphTest {
 			AccumuloGraphOptions opts = new AccumuloGraphOptions();
 			opts.setMock(true);
 			opts.setGraphTable(graphDirectoryName);
-			opts.setUsePropertyCache(true);
+			opts.setIndexTable(graphDirectoryName+"_index");
 
 			return new AccumuloGraph(opts);
 

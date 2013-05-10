@@ -5,6 +5,9 @@ import org.apache.accumulo.core.client.MutationsRejectedException;
 import org.apache.accumulo.core.data.Mutation;
 
 /**
+ * This class wraps a BatchWriter and flushes Mutations
+ * immediately, rather than letting the BatchWriter
+ * decide.  It helps with timing issues.
  * @author Mike Lieberman (http://mikelieberman.org)
  */
 public class FlushedBatchWriter implements BatchWriter {

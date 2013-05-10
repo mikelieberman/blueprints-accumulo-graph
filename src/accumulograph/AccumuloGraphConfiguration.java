@@ -38,8 +38,6 @@ import com.tinkerpop.rexster.config.GraphConfigurationException;
  *       <!-- <mock>false</mock> -->
  *       <!-- Whether to return values for properties that are removed. This can slow things down -->
  *       <!-- <returnRemovedPropertyValues>true</returnRemovedPropertyValues> -->
- *       <!-- Whether to use a property cache to speed things up -->
- *       <!-- <usePropertyCache>false</usePropertyCache> -->
  *     </properties>
  *   </graph>
  * }
@@ -76,7 +74,6 @@ public class AccumuloGraphConfiguration implements GraphConfiguration {
 		boolean mock = properties.getBoolean(Const.MOCK, false);
 		boolean returnRemovedPropertyValues =
 				properties.getBoolean(Const.RETURNREMOVEDPROPERTYVALUES, true);
-		boolean usePropertyCache = properties.getBoolean(Const.USEPROPERTYCACHE, false);
 
 		try {
 			AccumuloGraphOptions opts = new AccumuloGraphOptions();
@@ -86,7 +83,6 @@ public class AccumuloGraphConfiguration implements GraphConfiguration {
 			opts.setAutoflush(autoflush);
 			opts.setMock(mock);
 			opts.setReturnRemovedPropertyValues(returnRemovedPropertyValues);
-			opts.setUsePropertyCache(usePropertyCache);
 
 			return new AccumuloGraph(opts);
 

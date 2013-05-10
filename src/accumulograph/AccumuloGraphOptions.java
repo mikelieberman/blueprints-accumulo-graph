@@ -8,6 +8,7 @@ import org.apache.accumulo.core.client.ZooKeeperInstance;
 import org.apache.accumulo.core.client.mock.MockInstance;
 
 /**
+ * Graph options.
  * @author Mike Lieberman (http://mikelieberman.org)
  */
 public class AccumuloGraphOptions {
@@ -19,7 +20,6 @@ public class AccumuloGraphOptions {
 	private boolean mock = false;
 	private boolean autoflush = true;
 	private boolean returnRemovedPropertyValues = true;
-	private boolean usePropertyCache = false;
 
 	public boolean getAutoflush() {
 		return autoflush;
@@ -104,12 +104,4 @@ public class AccumuloGraphOptions {
 		this.returnRemovedPropertyValues = returnRemovedPropertyValues;
 	}
 
-	public boolean getUsePropertyCache() {
-		return usePropertyCache;
-	}
-
-	public void setUsePropertyCache(boolean usePropertyCache) {
-		this.usePropertyCache = usePropertyCache;
-	}
-	
 }

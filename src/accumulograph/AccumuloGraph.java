@@ -2,6 +2,9 @@ package accumulograph;
 
 import java.util.Iterator;
 import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Set;
+
 import org.apache.accumulo.core.Constants;
 import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
@@ -11,7 +14,6 @@ import org.apache.accumulo.core.client.MutationsRejectedException;
 import org.apache.accumulo.core.client.Scanner;
 import org.apache.accumulo.core.client.TableExistsException;
 import org.apache.accumulo.core.client.TableNotFoundException;
-import org.apache.accumulo.core.client.admin.TableOperations;
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Mutation;
 import org.apache.accumulo.core.data.Range;
@@ -22,11 +24,14 @@ import accumulograph.Const.Type;
 
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
+import com.tinkerpop.blueprints.Element;
 import com.tinkerpop.blueprints.Features;
-import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.GraphQuery;
+import com.tinkerpop.blueprints.KeyIndexableGraph;
+import com.tinkerpop.blueprints.Parameter;
 import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.util.DefaultGraphQuery;
+import com.tinkerpop.blueprints.util.PropertyFilteredIterable;
 
 /**
  * An implementation of Blueprints backed by Accumulo.
@@ -48,13 +53,15 @@ import com.tinkerpop.blueprints.util.DefaultGraphQuery;
  * @author Mike Lieberman (http://mikelieberman.org)
  *
  */
-public class AccumuloGraph implements Graph {
+public class AccumuloGraph implements KeyIndexableGraph {
 
 	protected AccumuloGraphOptions opts;
 	protected Scanner scanner;
 	protected BatchScanner batchScanner;
 	protected BatchWriter writer;
-	
+
+	protected AccumuloKeyIndex keyIndex;
+
 	/**
 	 * Create a graph backed by Accumulo.
 	 * @param opts Graph options
@@ -62,16 +69,17 @@ public class AccumuloGraph implements Graph {
 	 */
 	public AccumuloGraph(AccumuloGraphOptions opts) throws AccumuloException {
 		validateOptions(opts);
-		
+
 		try {
 			this.opts = opts;
-			
-			createTableIfNotExists(opts.getGraphTable());
-			
+
+			Utils.createTableIfNotExists(opts.getConnector(), opts.getGraphTable());
+
 			if (opts.getIndexTable() != null) {
-				createTableIfNotExists(opts.getIndexTable());
+				Utils.createTableIfNotExists(opts.getConnector(), opts.getIndexTable());
+				keyIndex = new AccumuloKeyIndex(this);
 			}
-			
+
 			initScannersAndWriter();
 
 		} catch (TableNotFoundException e) {
@@ -82,20 +90,12 @@ public class AccumuloGraph implements Graph {
 			throw new AccumuloException(e);
 		}
 	}
-	
+
 	protected static void validateOptions(AccumuloGraphOptions opts) {
 		if (opts.getConnector() == null) {
 			throw new IllegalArgumentException("Connector not set");
 		} else if (opts.getGraphTable() == null) {
 			throw new IllegalArgumentException("Graph table not specified");
-		}
-	}
-	
-	protected void createTableIfNotExists(String table) throws AccumuloException, AccumuloSecurityException, TableExistsException {
-		// Check whether table exists already and create if not.
-		TableOperations ops = opts.getConnector().tableOperations();
-		if (!ops.exists(table)) {
-			ops.create(table);
 		}
 	}
 
@@ -112,15 +112,13 @@ public class AccumuloGraph implements Graph {
 
 	public void clear() throws AccumuloException {
 		try {
-			TableOperations ops = opts.getConnector().tableOperations();
-
-			if (ops.exists(opts.getGraphTable())) {
-				ops.delete(opts.getGraphTable());
-			}
-
-			ops.create(opts.getGraphTable());
-
+			Utils.recreateTable(opts.getConnector(), opts.getGraphTable());
+			
 			initScannersAndWriter();
+			
+			if (keyIndex != null) {
+				keyIndex.clear();
+			}
 
 		} catch (AccumuloSecurityException e) {
 			throw new AccumuloException(e);
@@ -141,14 +139,18 @@ public class AccumuloGraph implements Graph {
 		AccumuloVertex vertex = new AccumuloVertex(this, id);
 
 		// Add vertex.
-		Mutation m = new Mutation(vertex.getRow());
+		Mutation m = new Mutation(vertex.getIdRow());
 		m.put(Const.VERTEXTYPE, Const.EMPTY, Const.EMPTYVALUE);
 		Utils.addMutation(writer, m);
 
 		// Add to vertex list.
 		m = new Mutation(Const.VERTEXTYPE);
-		m.put(vertex.getRow(), Const.EMPTY, Const.EMPTYVALUE);
+		m.put(vertex.getIdRow(), Const.EMPTY, Const.EMPTYVALUE);
 		Utils.addMutation(writer, m);
+
+		if (keyIndex != null) {
+			keyIndex.addOrRemoveFromIndex(vertex, true);
+		}
 
 		return vertex;
 	}
@@ -159,12 +161,17 @@ public class AccumuloGraph implements Graph {
 			throw new IllegalArgumentException("Id cannot be null");
 		}
 
-		return containsElement(Type.VERTEX, id) ? new AccumuloVertex(this, id) : null;
+		return containsElement(Type.VERTEXID, id) ? new AccumuloVertex(this, id) : null;
 	}
 
 	@Override
 	public void removeVertex(Vertex vertex) {
 		AccumuloVertex v = (AccumuloVertex) vertex;
+
+		// Remove from index.
+		if (keyIndex != null) {
+			keyIndex.addOrRemoveFromIndex(vertex, false);
+		}
 
 		// Remove all edges that this vertex participates.
 		for (Edge edge : vertex.getEdges(Direction.BOTH)) {
@@ -173,11 +180,11 @@ public class AccumuloGraph implements Graph {
 
 		// Remove from vertex list.
 		Mutation m = new Mutation(Const.VERTEXTYPE);
-		m.putDelete(v.getRow(), Const.EMPTY);
+		m.putDelete(v.getIdRow(), Const.EMPTY);
 		Utils.addMutation(writer, m);
 
 		// Everything else related to vertex.
-		m = new Mutation(v.getRow());
+		m = new Mutation(v.getIdRow());
 		m.putDelete(Const.EMPTY, Const.EMPTY);
 		Utils.addMutation(writer, m);
 	}
@@ -187,9 +194,8 @@ public class AccumuloGraph implements Graph {
 		final AccumuloGraph parent = this;
 
 		return new Iterable<Vertex>() {
-
 			private Iterator<Map.Entry<Key, Value>> iterator;
-			private AccumuloVertex current;
+			private Text eltIdCf = new Text();
 
 			@Override
 			public Iterator<Vertex> iterator() {
@@ -205,17 +211,21 @@ public class AccumuloGraph implements Graph {
 
 					@Override
 					public Vertex next() {
-						current = makeVertex(iterator.next().getKey().getColumnFamily());
-						return current;
+						if (!iterator.hasNext()) {
+							throw new NoSuchElementException();
+						}
+
+						iterator.next().getKey().getColumnFamily(eltIdCf);
+						return makeVertex(eltIdCf);
 					}
 
 					@Override
 					public void remove() {
-						current.remove();
+						iterator.remove();
 					}
 
-					private AccumuloVertex makeVertex(Text row) {
-						return new AccumuloVertex(parent, Utils.textToEltId(row));						
+					private AccumuloVertex makeVertex(Text id) {
+						return new AccumuloVertex(parent, Utils.textToTypedObject(id));						
 					}
 
 				};
@@ -223,63 +233,14 @@ public class AccumuloGraph implements Graph {
 		};
 	}
 
-	// TODO: Use indexes
 	@Override
 	public Iterable<Vertex> getVertices(String key, Object value) {
-		final String pkey = key;
-		final Object pval = value;
-
-		return new Iterable<Vertex>() {
-
-			@Override
-			public Iterator<Vertex> iterator() {
-				final Iterator<Vertex> i = getVertices().iterator();
-
-				return new Iterator<Vertex>() {
-
-					private Vertex current = null;
-					private Vertex next = null;
-
-					private void loadNext() {
-						if (next != null) {
-							return;
-						}
-
-						while (i.hasNext()) {
-							next = i.next();
-
-							Object val = next.getProperty(pkey);
-							if (pval.equals(val)) {
-								return;
-							}
-
-							next = null;
-						}
-					}
-
-					@Override
-					public boolean hasNext() {
-						loadNext();
-						return next != null;
-					}
-
-					@Override
-					public Vertex next() {
-						loadNext();
-						current = next;
-						next = null;
-						return current;
-					}
-
-					@Override
-					public void remove() {
-						current.remove();
-					}
-
-				};
-			}
-
-		};
+		if (keyIndex != null && keyIndex.getIndexedKeys(Vertex.class).contains(key)) {
+			return keyIndex.getElements(key, value, Vertex.class);
+		}
+		else {
+			return new PropertyFilteredIterable<Vertex>(key, value, getVertices());
+		}
 	}
 
 	@Override
@@ -291,28 +252,32 @@ public class AccumuloGraph implements Graph {
 		AccumuloEdge edge = new AccumuloEdge(this, id, out, in, label);
 
 		// Add the edge and its information.
-		Mutation m = new Mutation(edge.getRow());
+		Mutation m = new Mutation(edge.getIdRow());
 		m.put(Const.EDGETYPE, Utils.stringToText(label), Const.EMPTYVALUE);
-		m.put(Const.OUTVERTEX, Utils.eltIdToText(Type.VERTEX, out.getId()), Const.EMPTYVALUE);
-		m.put(Const.INVERTEX, Utils.eltIdToText(Type.VERTEX, in.getId()), Const.EMPTYVALUE);
+		m.put(Const.OUTVERTEX, Utils.typedObjectToText(Type.VERTEXID, out.getId()), Const.EMPTYVALUE);
+		m.put(Const.INVERTEX, Utils.typedObjectToText(Type.VERTEXID, in.getId()), Const.EMPTYVALUE);
 		Utils.addMutation(writer, m);
 
 		// Add to edge list.
 		m = new Mutation(Const.EDGETYPE);
-		m.put(edge.getRow(), Const.EMPTY, Const.EMPTYVALUE);
+		m.put(edge.getIdRow(), Const.EMPTY, Const.EMPTYVALUE);
 		Utils.addMutation(writer, m);
 
 		// Update out vertex.
-		m = new Mutation(out.getRow());
-		m.put(Const.OUTEDGE, edge.getRow(),
+		m = new Mutation(out.getIdRow());
+		m.put(Const.OUTEDGE, edge.getIdRow(),
 				Utils.stringToValue(label));
 		Utils.addMutation(writer, m);
 
 		// Update in vertex.
-		m = new Mutation(in.getRow());
-		m.put(Const.INEDGE, edge.getRow(),
+		m = new Mutation(in.getIdRow());
+		m.put(Const.INEDGE, edge.getIdRow(),
 				Utils.stringToValue(label));
 		Utils.addMutation(writer, m);
+
+		if (keyIndex != null) {
+			keyIndex.addOrRemoveFromIndex(edge, true);
+		}
 
 		return edge;
 	}
@@ -323,32 +288,37 @@ public class AccumuloGraph implements Graph {
 			throw new IllegalArgumentException("Id cannot be null.");
 		}
 
-		return containsElement(Type.EDGE, id) ? new AccumuloEdge(this, id) : null;
+		return containsElement(Type.EDGEID, id) ? new AccumuloEdge(this, id) : null;
 	}
 
 	@Override
 	public void removeEdge(Edge edge) {
 		AccumuloEdge e = (AccumuloEdge) edge;
 
+		// Remove from index.
+		if (keyIndex != null) {
+			keyIndex.addOrRemoveFromIndex(edge, false);
+		}
+
 		AccumuloVertex out = (AccumuloVertex) e.getVertex(Direction.OUT);
 		AccumuloVertex in = (AccumuloVertex) e.getVertex(Direction.IN);
 
 		// Remove edge info from out/in vertices.
-		Mutation m = new Mutation(out.getRow());
-		m.putDelete(Const.OUTEDGE, e.getRow());
+		Mutation m = new Mutation(out.getIdRow());
+		m.putDelete(Const.OUTEDGE, e.getIdRow());
 		Utils.addMutation(writer, m);
 
-		m = new Mutation(in.getRow());
-		m.putDelete(Const.INEDGE, e.getRow());
+		m = new Mutation(in.getIdRow());
+		m.putDelete(Const.INEDGE, e.getIdRow());
 		Utils.addMutation(writer, m);
 
 		// Remove from edge list.
 		m = new Mutation(Const.EDGETYPE);
-		m.putDelete(e.getRow(), Const.EMPTY);
+		m.putDelete(e.getIdRow(), Const.EMPTY);
 		Utils.addMutation(writer, m);
 
 		// Remove everything else.
-		m = new Mutation(e.getRow());
+		m = new Mutation(e.getIdRow());
 		m.putDelete(Const.EMPTY, Const.EMPTY);
 	}
 
@@ -358,8 +328,7 @@ public class AccumuloGraph implements Graph {
 
 		return new Iterable<Edge>() {
 			private Iterator<Map.Entry<Key, Value>> iterator;
-			private AccumuloEdge current;
-			private Text cf = new Text();
+			private Text eltIdCf = new Text();
 
 			@Override
 			public Iterator<Edge> iterator() {
@@ -375,18 +344,21 @@ public class AccumuloGraph implements Graph {
 
 					@Override
 					public Edge next() {
-						iterator.next().getKey().getColumnFamily(cf);
-						current = makeEdge(cf);
-						return current;
+						if (!iterator.hasNext()) {
+							throw new NoSuchElementException();
+						}
+
+						iterator.next().getKey().getColumnFamily(eltIdCf);
+						return makeEdge(eltIdCf);
 					}
 
 					@Override
 					public void remove() {
-						current.remove();
+						iterator.remove();
 					}
 
-					private AccumuloEdge makeEdge(Text row) {
-						return new AccumuloEdge(parent, Utils.textToEltId(row));
+					private AccumuloEdge makeEdge(Text id) {
+						return new AccumuloEdge(parent, Utils.textToTypedObject(id));
 					}
 
 				};
@@ -398,60 +370,12 @@ public class AccumuloGraph implements Graph {
 	// TODO: Use indexes
 	@Override
 	public Iterable<Edge> getEdges(String key, Object value) {
-		final String pkey = key;
-		final Object pval = value;
-
-		return new Iterable<Edge>() {
-
-			@Override
-			public Iterator<Edge> iterator() {
-				final Iterator<Edge> i = getEdges().iterator();
-
-				return new Iterator<Edge>() {
-
-					private Edge current = null;
-					private Edge next = null;
-
-					private void loadNext() {
-						if (next != null) {
-							return;
-						}
-
-						while (i.hasNext()) {
-							next = i.next();
-
-							Object val = next.getProperty(pkey);
-							if (pval.equals(val)) {
-								return;
-							}
-
-							next = null;
-						}
-					}
-
-					@Override
-					public boolean hasNext() {
-						loadNext();
-						return next != null;
-					}
-
-					@Override
-					public Edge next() {
-						loadNext();
-						current = next;
-						next = null;
-						return current;
-					}
-
-					@Override
-					public void remove() {
-						current.remove();
-					}
-
-				};
-			}
-
-		};
+		if (keyIndex != null && keyIndex.getIndexedKeys(Edge.class).contains(key)) {
+			return keyIndex.getElements(key, value, Edge.class);
+		}
+		else {
+			return new PropertyFilteredIterable<Edge>(key, value, getEdges());
+		}
 	}
 
 	// TODO: Make this more efficient
@@ -463,8 +387,16 @@ public class AccumuloGraph implements Graph {
 	@Override
 	public void shutdown() {
 		try {
+			writer.flush();
 			writer.close();
 
+			if (keyIndex != null) {
+				keyIndex.close();
+			}
+			
+			// TODO Still some timing issues here...
+			Utils.sleep(50L);
+			
 		} catch (MutationsRejectedException e) {
 			throw new RuntimeException(e);
 		}
@@ -476,8 +408,29 @@ public class AccumuloGraph implements Graph {
 	}
 
 	protected boolean containsElement(Type type, Object id) {
-		scanner.setRange(new Range(Utils.eltIdToText(type, id)));
+		scanner.setRange(new Range(Utils.typedObjectToText(type, id)));
 		return Utils.firstEntry(scanner) != null;
+	}
+
+	@Override
+	public <T extends Element> void dropKeyIndex(String key,
+			Class<T> elementClass) {
+		if (keyIndex != null) {
+			keyIndex.dropKeyIndex(key, elementClass);
+		}
+	}
+
+	@Override
+	public <T extends Element> void createKeyIndex(String key,
+			Class<T> elementClass, Parameter... indexParameters) {
+		if (keyIndex != null) {
+			keyIndex.createKeyIndex(key, elementClass);
+		}
+	}
+
+	@Override
+	public <T extends Element> Set<String> getIndexedKeys(Class<T> elementClass) {
+		return keyIndex != null ? keyIndex.getIndexedKeys(elementClass) : null;
 	}
 
 }

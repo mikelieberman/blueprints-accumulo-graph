@@ -1,7 +1,6 @@
 package accumulograph;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import org.apache.accumulo.core.data.Key;
@@ -15,6 +14,8 @@ import accumulograph.Const.Type;
 import com.tinkerpop.blueprints.Element;
 
 /**
+ * Element implementation. This provides hooks for
+ * setting/removing properties.
  * @author Mike Lieberman (http://mikelieberman.org)
  */
 public abstract class AccumuloElement implements Element {
@@ -22,7 +23,7 @@ public abstract class AccumuloElement implements Element {
 	protected AccumuloGraph parent;
 	protected Type type;
 	protected Object id;
-	protected Text row;
+	protected Text idRow;
 
 	protected AccumuloElement(AccumuloGraph parent,
 			Object id, Type type) {
@@ -34,13 +35,13 @@ public abstract class AccumuloElement implements Element {
 		}
 		
 		this.id = id;
-		this.row = Utils.eltIdToText(type, id);
+		this.idRow = Utils.typedObjectToText(type, id);
 	}
 
 	@Override
 	public <T> T getProperty(String key) {
-		parent.scanner.setRange(new Range(row));
-		parent.scanner.fetchColumn(Const.PROP, Utils.stringToText(key));
+		parent.scanner.setRange(new Range(idRow));
+		parent.scanner.fetchColumn(Const.PROPERTY, Utils.stringToText(key));
 		Map.Entry<Key, Value> entry = Utils.firstEntry(parent.scanner);
 		parent.scanner.clearColumns();
 		return entry != null ? Utils.<T>valueToObject(entry.getValue()) : null;
@@ -50,16 +51,15 @@ public abstract class AccumuloElement implements Element {
 	public Set<String> getPropertyKeys() {
 		Set<String> keys = new HashSet<String>();
 
-		parent.scanner.setRange(new Range(row));
-		parent.scanner.fetchColumnFamily(Const.PROP);
-		Iterator<Map.Entry<Key, Value>> i = parent.scanner.iterator();
-		parent.scanner.clearColumns();
+		parent.scanner.setRange(new Range(idRow));
+		parent.scanner.fetchColumnFamily(Const.PROPERTY);
 
-		while (i.hasNext()) {
-			Map.Entry<Key, Value> entry = i.next();
+		for (Map.Entry<Key, Value> entry : parent.scanner) {
 			keys.add(Utils.textToString(entry.getKey().getColumnQualifier()));
 		}
-		
+
+		parent.scanner.clearColumns();
+
 		return keys;
 	}
 
@@ -78,12 +78,14 @@ public abstract class AccumuloElement implements Element {
 			throw new IllegalArgumentException("Value cannot be null.");
 		}
 		
-		Mutation m = new Mutation(row);
-
-		m.put(Const.PROP, Utils.stringToText(key),
+		Mutation m = new Mutation(idRow);
+		m.put(Const.PROPERTY, Utils.stringToText(key),
 				Utils.objectToValue(value));
-
 		Utils.addMutation(parent.writer, m);
+		
+		if (parent.keyIndex != null) {
+			parent.keyIndex.addPropertyToIndex(this, key, value);
+		}
 	}
 
 	@Override
@@ -94,19 +96,15 @@ public abstract class AccumuloElement implements Element {
 			old = getProperty(key);
 		}
 
-		removeProperties(key);
-
-		return old;
-	}
-
-	protected void removeProperties(String... keys) {
-		Mutation m = new Mutation(row);
-
-		for (String key : keys) {
-			m.putDelete(Const.PROP, Utils.stringToText(key));
+		Mutation m = new Mutation(idRow);
+		m.putDelete(Const.PROPERTY, Utils.stringToText(key));
+		Utils.addMutation(parent.writer, m);
+		
+		if (parent.keyIndex != null) {
+			parent.keyIndex.removePropertyFromIndex(this, key);
 		}
 
-		Utils.addMutation(parent.writer, m);
+		return old;
 	}
 
 	@Override
@@ -114,8 +112,8 @@ public abstract class AccumuloElement implements Element {
 		return id;
 	}
 
-	protected Text getRow() {
-		return row;
+	protected Text getIdRow() {
+		return idRow;
 	}
 	
 	@Override
@@ -123,7 +121,7 @@ public abstract class AccumuloElement implements Element {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((id == null) ? 0 : id.hashCode());
-		result = prime * result + ((row == null) ? 0 : row.hashCode());
+		result = prime * result + ((idRow == null) ? 0 : idRow.hashCode());
 		result = prime * result + ((type == null) ? 0 : type.hashCode());
 		return result;
 	}
@@ -142,10 +140,10 @@ public abstract class AccumuloElement implements Element {
 				return false;
 		} else if (!id.equals(other.id))
 			return false;
-		if (row == null) {
-			if (other.row != null)
+		if (idRow == null) {
+			if (other.idRow != null)
 				return false;
-		} else if (!row.equals(other.row))
+		} else if (!idRow.equals(other.idRow))
 			return false;
 		if (type != other.type)
 			return false;

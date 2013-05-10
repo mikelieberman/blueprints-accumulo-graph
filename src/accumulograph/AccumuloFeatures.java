@@ -18,13 +18,13 @@ public class AccumuloFeatures extends Features {
 		supportsDuplicateEdges = true;
 		supportsEdgeIndex = false; // TODO
 		supportsEdgeIteration = true;
-		supportsEdgeKeyIndex = false; // TODO
+		supportsEdgeKeyIndex = true; // TODO
 		supportsEdgeProperties = true;
 		supportsEdgeRetrieval = true;
 		supportsFloatProperty = true;
 		supportsIndices = false; // TODO
 		supportsIntegerProperty = true;
-		supportsKeyIndices = false; // TODO
+		supportsKeyIndices = true; // TODO
 		supportsLongProperty = true;
 		supportsMapProperty = true;
 		supportsMixedListProperty = true;
@@ -37,7 +37,7 @@ public class AccumuloFeatures extends Features {
 		supportsUniformListProperty = true;
 		supportsVertexIndex = false; // TODO
 		supportsVertexIteration = true;
-		supportsVertexKeyIndex = false; // TODO
+		supportsVertexKeyIndex = true; // TODO
 		supportsVertexProperties = true;
 	}
 	

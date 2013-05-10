@@ -1,6 +1,5 @@
 package accumulograph;
 
-import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.accumulo.core.data.Key;
@@ -15,6 +14,7 @@ import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Vertex;
 
 /**
+ * Edge implementation.
  * @author Mike Lieberman (http://mikelieberman.org)
  */
 public class AccumuloEdge extends AccumuloElement implements Edge {
@@ -24,19 +24,17 @@ public class AccumuloEdge extends AccumuloElement implements Edge {
 	protected String label;
 	
 	public AccumuloEdge(AccumuloGraph parent, Object id) {
-		super(parent, id, Type.EDGE);
-		
-		parent.scanner.setRange(new Range(row));
-		parent.scanner.fetchColumnFamily(Const.EDGETYPE);
-		parent.scanner.fetchColumnFamily(Const.OUTVERTEX);
-		parent.scanner.fetchColumnFamily(Const.INVERTEX);
-		Iterator<Map.Entry<Key, Value>> i = parent.scanner.iterator();
-		parent.scanner.clearColumns();
+		super(parent, id, Type.EDGEID);
 		
 		Text cf = new Text();
 		Text cq = new Text();
-		while (i.hasNext()) {
-			Map.Entry<Key, Value> entry = i.next();
+		
+		parent.scanner.setRange(new Range(idRow));
+		parent.scanner.fetchColumnFamily(Const.EDGETYPE);
+		parent.scanner.fetchColumnFamily(Const.OUTVERTEX);
+		parent.scanner.fetchColumnFamily(Const.INVERTEX);
+		
+		for (Map.Entry<Key, Value> entry : parent.scanner) {
 			entry.getKey().getColumnFamily(cf);
 			entry.getKey().getColumnQualifier(cq);
 			
@@ -44,21 +42,23 @@ public class AccumuloEdge extends AccumuloElement implements Edge {
 				label = cq.toString();
 			}
 			else if (cf.equals(Const.OUTVERTEX)) {
-				out = new AccumuloVertex(parent, Utils.textToEltId(cq));
+				out = new AccumuloVertex(parent, Utils.textToTypedObject(cq));
 			}
 			else if (cf.equals(Const.INVERTEX)) {
-				in = new AccumuloVertex(parent, Utils.textToEltId(cq));
+				in = new AccumuloVertex(parent, Utils.textToTypedObject(cq));
 			}
 			else {
 				throw new RuntimeException("Unexpected CF: "+cf);
 			}
 		}
+
+		parent.scanner.clearColumns();
 	}
 	
 	public AccumuloEdge(AccumuloGraph parent, Object id,
 			AccumuloVertex out, AccumuloVertex in,
 			String label) {
-		super(parent, id, Type.EDGE);
+		super(parent, id, Type.EDGEID);
 		this.out = out;
 		this.in = in;
 		this.label = label;

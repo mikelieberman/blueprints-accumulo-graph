@@ -19,12 +19,13 @@ import com.tinkerpop.blueprints.VertexQuery;
 import com.tinkerpop.blueprints.util.DefaultVertexQuery;
 
 /**
+ * Vertex implementation.
  * @author Mike Lieberman (http://mikelieberman.org)
  */
 public class AccumuloVertex extends AccumuloElement implements Vertex {
 
 	public AccumuloVertex(AccumuloGraph parent, Object id) {
-		super(parent, id, Type.VERTEX);
+		super(parent, id, Type.VERTEXID);
 	}
 
 	@Override
@@ -38,7 +39,7 @@ public class AccumuloVertex extends AccumuloElement implements Vertex {
 
 			@Override
 			public Iterator<Edge> iterator() {
-				parent.scanner.setRange(new Range(row));
+				parent.scanner.setRange(new Range(idRow));
 
 				if (takeOut(dir)) {
 					parent.scanner.fetchColumnFamily(Const.OUTEDGE);
@@ -100,7 +101,7 @@ public class AccumuloVertex extends AccumuloElement implements Vertex {
 						next.getKey().getColumnQualifier(cq);
 						next = null;
 
-						current = new AccumuloEdge(parent, Utils.textToEltId(cq));
+						current = new AccumuloEdge(parent, Utils.textToTypedObject(cq));
 						return current;
 					}
 
@@ -127,7 +128,7 @@ public class AccumuloVertex extends AccumuloElement implements Vertex {
 			@Override
 			public Iterator<Vertex> iterator() {
 				// First we get edges attached to this vertex.
-				parent.scanner.setRange(new Range(row));
+				parent.scanner.setRange(new Range(idRow));
 
 				if (takeOut(dir)) {
 					parent.scanner.fetchColumnFamily(Const.OUTEDGE);
@@ -202,11 +203,11 @@ public class AccumuloVertex extends AccumuloElement implements Vertex {
 							entry.getKey().getColumnFamily(endpointType);
 							entry.getKey().getColumnQualifier(endpointType.equals(Const.OUTVERTEX) ? outVertexRow : inVertexRow);
 
-							if (takeOut(dir) && outVertexRow.equals(row)) {
+							if (takeOut(dir) && outVertexRow.equals(idRow)) {
 								rowIds.add(inVertexRow);
 							}
 
-							if (takeIn(dir) && inVertexRow.equals(row)
+							if (takeIn(dir) && inVertexRow.equals(idRow)
 									// Don't want duplicates for self-loops.
 									&& !rowIds.contains(outVertexRow)) {
 								rowIds.add(outVertexRow);
@@ -228,7 +229,7 @@ public class AccumuloVertex extends AccumuloElement implements Vertex {
 					public Vertex next() {
 						loadMore();
 						current = new AccumuloVertex(parent,
-								Utils.textToEltId(rowIds.remove()));
+								Utils.textToTypedObject(rowIds.remove()));
 						return current;
 					}
 

@@ -4,6 +4,7 @@ import org.apache.accumulo.core.data.Value;
 import org.apache.hadoop.io.Text;
 
 /**
+ * Various constants.
  * @author Mike Lieberman (http://mikelieberman.org)
  */
 public final class Const {
@@ -13,7 +14,7 @@ public final class Const {
 	}
 	
 	// For Rexster configuration.
-	public static final String PREFIX = "AccumuloGraph";
+	public static final String PREFIX = "properties";
 	public static final String ZOOKEEPERS = PREFIX+".zookeepers";
 	public static final String INSTANCE = PREFIX+".instance";
 	public static final String USERNAME = PREFIX+".username";
@@ -28,7 +29,7 @@ public final class Const {
 			PREFIX+".usePropertyCache";
 	
 	// Types of Accumulo records.
-	public static enum Type {META, VERTEX, EDGE, PROP};
+	public static enum Type {METADATA, VERTEXID, EDGEID, VERTEXPROPERTY, EDGEPROPERTY};
 
 	// Vertex-related.
 	public static final Text VERTEXTYPE = new Text("MVERTEX");
@@ -40,8 +41,11 @@ public final class Const {
 	public static final Text OUTVERTEX = new Text("VOUT");
 	public static final Text INVERTEX = new Text("VIN");
 	
-	// Element-related.
-	public static final Text PROP = new Text("PROP");
+	// Property-related.
+	public static final Text PROPERTY = new Text("PROP"); // Property signal
+	// Index table stuff.
+	public static final Text VERTEXPROPERTYLIST = new Text("PVLIST"); // Property lists
+	public static final Text EDGEPROPERTYLIST = new Text("PELIST"); // Property lists
 	
 	// Misc.
 	public static final Text EMPTY = new Text();
