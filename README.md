@@ -30,8 +30,7 @@ How to use it
 
 Options are as follows:
 
-* Connector info: Set zookeepers, instance name, username,
-  password.  Essentially the values you need to connect to Accumulo.
+* Connector info: Set the information you need to connect to Accumulo.
   Alternatively, pass in an Accumulo Connector object which represents
   the connection.  If not supplied, mock instance is needed (see
   below).
