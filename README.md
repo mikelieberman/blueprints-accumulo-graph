@@ -22,9 +22,9 @@ How to use it
     
     // Optional
     opts.setIndexTable(indexTable);
-    opts.setAutoflush(false);
-    opts.setReturnRemovedPropertyValues(true);
-    opts.setMock(false);
+    opts.setAutoflush(...);
+    opts.setReturnRemovedPropertyValues(...);
+    opts.setMock(...);
     
     AccumuloGraph graph = new AccumuloGraph(opts);
 
