@@ -35,6 +35,8 @@ public class FlushedBatchWriter implements BatchWriter {
 	@Override
 	public void flush() throws MutationsRejectedException {
 		writer.flush();
+		// TODO Timing issues
+		Utils.sleep(1);
 	}
 
 	@Override

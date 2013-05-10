@@ -286,8 +286,6 @@ public class AccumuloKeyIndex {
 
 		Mutation m = new Mutation(Utils.typedObjectToText(propertyType, key));
 		
-		System.err.println(element.getProperty(key));
-
 		if (indexedKeys.contains(key)) {
 			m.put(Utils.objectToText(value),
 					Utils.typedObjectToText(elementIdType, element.getId()), Const.EMPTYVALUE);
@@ -333,8 +331,6 @@ public class AccumuloKeyIndex {
 					m.putDelete(Utils.objectToText(value), eltIdCq);
 				}
 				
-				System.err.println(m.size());
-
 				Utils.addMutation(indexWriter, m);
 			}
 		}

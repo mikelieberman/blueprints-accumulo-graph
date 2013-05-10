@@ -50,7 +50,8 @@ Options are as follows:
  - Connector info (required): Set zookeepers, instance name, username,
    password.  Essentially the values you need to connect to Accumulo.
    Alternatively, pass in an Accumulo Connector object which represents
-   the connection.
+   the connection.  If not supplied, mock instance is needed (see
+   below).
 
  - Graph table (required): Where to store the graph.
 
@@ -65,6 +66,11 @@ Options are as follows:
    property is returned.  This potentially requires another read from
    Accumulo.  If you don't care what is returned, disable this
    to speed things up.
+
+ - Use mock instance (optional, default false): If you don't have an
+   Accumulo cluster lying around, but still want to use this, you can
+   use a "mock" instance of Accumulo which runs in memory and simulates a
+   real cluster.
 
 
 Caveats
