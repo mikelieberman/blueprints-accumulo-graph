@@ -12,34 +12,45 @@ performance testing, but it seems okay. :)
 How to use it
 -------------
 
-Create an instance of AccumuloGraphOptions, which allows control over
-various features implemented by this adapter using get/set methods.
-Then create an instance of AccumuloGraph and pass in the options
-object.
+    AccumuloGraphOptions opts = new AccumuloGraphOptions();
+    
+    opts.setConnectorInfo(instance, zookeepers, username, password);
+    // OR
+    opts.setConnector(connector);
+
+    opts.setGraphTable(graphTable);
+    
+    // Optional
+    opts.setIndexTable(indexTable);
+    opts.setAutoflush(false);
+    opts.setReturnRemovedPropertyValues(true);
+    opts.setMock(false);
+    
+    AccumuloGraph graph = new AccumuloGraph(opts);
 
 Options are as follows:
 
-* Connector info (required): Set zookeepers, instance name, username,
+* Connector info: Set zookeepers, instance name, username,
   password.  Essentially the values you need to connect to Accumulo.
   Alternatively, pass in an Accumulo Connector object which represents
   the connection.  If not supplied, mock instance is needed (see
   below).
 
-* Graph table (required): Where to store the graph.
+* Graph table: Where to store the graph.
 
-* Index table (optional): Where to store the key/value index.
+* Index table: Where to store the key/value index.
 
-* Autoflush (optional, default true): Immediately flush changes to
+* Autoflush (default: true): Immediately flush changes to
   Accumulo, rather than waiting for performance reasons.  If
   disabled, may cause timing issues (see caveats).
 
-* Return removed property values (optional, default true): The
+* Return removed property values (default: true): The
   removeProperty method specifies that the value of the removed
   property is returned.  This potentially requires another read from
   Accumulo.  If you don't care what is returned, disable this
   to speed things up.
 
-* Use mock instance (optional, default false): If you don't have an
+* Use mock instance (default: false): If you don't have an
   Accumulo cluster lying around, but still want to use this, you can
   use a "mock" instance of Accumulo which runs in memory and simulates a
   real cluster.
@@ -50,18 +61,18 @@ Caveats
 
 There are definitely bugs.
 
-Timing issues: There may be a lag time between when you add a
-vertex/edge, set their properties, etc. and when it is reflected in
-the backing Accumulo table.  This is done for performance reasons, but
-as a result, if you set values and then immediately read them back,
-the results may be inconsistent.  The same holds for key/value
-indexes.  This isn't a problem if you're doing things like bulk loads,
-or using the graph as read-only, but otherwise it may be problematic.
-If this is an issue, this can be mitigated somewhat using the
-autoflush option, where changes are flushed immediately to Accumulo,
-at the cost of write performance.  I have tried to reduce these timing
-issues as much as possible, but there may still be issues with this,
-and it needs more testing.
+<strong>Timing issues</strong>: There may be a lag time between when
+you add a vertex/edge, set their properties, etc. and when it is
+reflected in the backing Accumulo table.  This is done for performance
+reasons, but as a result, if you set values and then immediately read
+them back, the results may be inconsistent.  The same holds for
+key/value indexes.  This isn't a problem if you're doing things like
+bulk loads, or using the graph as read-only, but otherwise it may be
+problematic.  If this is an issue, this can be mitigated somewhat
+using the autoflush option, where changes are flushed immediately to
+Accumulo, at the cost of write performance.  I have tried to reduce
+these timing issues as much as possible, but there may still be issues
+with this, and it needs more testing.
 
 
 Todo
