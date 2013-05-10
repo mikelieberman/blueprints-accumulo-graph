@@ -27,7 +27,8 @@ If the index table is enabled, it has the following schema.
 
 <table>
 <tr><th>Row</th>        <th>CF</th>         <th>CQ</th>         <th>Val</th>    <th>Purpose</th></tr>
-<tr><td>PVLIST</td>     <td>[p name]</td>   <td>-</td>          <td>-</td>      <td>Property list</td></tr>
+<tr><td>PVLIST</td>     <td>[p name]</td>   <td>-</td>          <td>-</td>      <td>Vertex property list</td></tr>
+<tr><td>PELIST</td>     <td>[p name]</td>   <td>-</td>          <td>-</td>      <td>Edge property list</td></tr>
 <tr><td>[p name]</td>   <td>[p val]</td>    <td>[v/e id]</td>   <td>-</td>      <td>Property index</td></tr>
 </table>
 
