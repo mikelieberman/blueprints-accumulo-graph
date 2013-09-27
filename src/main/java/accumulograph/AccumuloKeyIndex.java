@@ -39,7 +39,7 @@ public class AccumuloKeyIndex {
 	private Set<String> indexedVertexKeys;
 	private Set<String> indexedEdgeKeys;
 
-	public AccumuloKeyIndex(AccumuloGraph parent) throws TableNotFoundException {
+	public AccumuloKeyIndex(AccumuloGraph parent) throws TableNotFoundException, AccumuloException {
 		this.parent = parent;
 
 		String table = parent.opts.getIndexTable();
@@ -65,7 +65,7 @@ public class AccumuloKeyIndex {
 		indexWriter.close();
 	}
 
-	protected void initScannerAndWriter() throws TableNotFoundException {
+	protected void initScannerAndWriter() throws TableNotFoundException, AccumuloException {
 		indexScanner = parent.opts.getConnector().createScanner(
 				parent.opts.getIndexTable(), Constants.NO_AUTHS);
 

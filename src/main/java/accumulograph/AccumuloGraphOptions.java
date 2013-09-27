@@ -13,8 +13,11 @@ import org.apache.accumulo.core.client.mock.MockInstance;
  */
 public class AccumuloGraphOptions {
 
+	private String instance;
+	private String zookeepers;
+	private String username;
+	private String password;
 	private Connector connector;
-	private Connector mockConnector;
 	private String graphTable;
 	private String indexTable;
 	private boolean mock = false;
@@ -46,14 +49,6 @@ public class AccumuloGraphOptions {
 	 */
 	public void setMock(boolean mock) throws AccumuloException {
 		this.mock = mock;
-
-		if (mock && mockConnector == null) {
-			try {
-				mockConnector = new MockInstance().getConnector("", "");
-			} catch (AccumuloSecurityException e) {
-				throw new AccumuloException(e);
-			}
-		}
 	}
 
 	/**
@@ -76,13 +71,10 @@ public class AccumuloGraphOptions {
 			throw new IllegalArgumentException("Password cannot be null");
 		}
 
-		try {
-			Instance inst = new ZooKeeperInstance(instance, zookeepers);
-			connector = inst.getConnector(username, password);
-			
-		} catch (AccumuloSecurityException e) {
-			throw new AccumuloException(e);
-		}
+		this.instance = instance;
+		this.zookeepers = zookeepers;
+		this.username = username;
+		this.password = password;
 	}
 
 	/**
@@ -96,8 +88,25 @@ public class AccumuloGraphOptions {
 		this.connector = connector;
 	}
 
-	public Connector getConnector() {
-		return mock ? mockConnector : connector;
+	public Connector getConnector() throws AccumuloException {
+		try {
+			if (connector == null) {
+				if (mock) {
+					connector = new MockInstance().getConnector("", "");				
+				}
+				else {
+					Instance inst = new ZooKeeperInstance(instance, zookeepers);
+					connector = inst.getConnector(username, password);				
+				}
+
+				password = null;
+			}
+
+			return connector;
+
+		} catch (AccumuloSecurityException e) {
+			throw new AccumuloException(e);
+		}
 	}
 
 	public String getGraphTable() {
@@ -140,6 +149,15 @@ public class AccumuloGraphOptions {
 	 */
 	public void setReturnRemovedPropertyValues(boolean returnRemovedPropertyValues) {
 		this.returnRemovedPropertyValues = returnRemovedPropertyValues;
+	}
+
+	@Override
+	public String toString() {
+		return "AccumuloGraphOptions [instance=" + instance + ", zookeepers="
+				+ zookeepers + ", graphTable=" + graphTable + ", indexTable="
+				+ indexTable + ", mock=" + mock + ", autoflush=" + autoflush
+				+ ", returnRemovedPropertyValues="
+				+ returnRemovedPropertyValues + "]";
 	}
 
 }

@@ -66,22 +66,22 @@ public class AccumuloGraph implements KeyIndexableGraph {
 	/**
 	 * Create a graph backed by Accumulo. This is used
 	 * when using {@link GraphFactory}.
-	 * @param properties The properties
-	 * @throws AccumuloException 
-	 */
-	public AccumuloGraph(Configuration properties) throws AccumuloException {
-		this(AccumuloGraphConfiguration.parseProperties(properties, Const.FACTORY_PREFIX));
-	}
-
-	/**
-	 * Create a graph backed by Accumulo. This is used
-	 * when using {@link GraphFactory}.
 	 * @param properties
 	 * @return
 	 * @throws AccumuloException
 	 */
 	public static AccumuloGraph open(Configuration properties) throws AccumuloException {
 		return new AccumuloGraph(properties);
+	}
+
+	/**
+	 * Create a graph backed by Accumulo. This is used
+	 * when using {@link GraphFactory}.
+	 * @param properties The properties
+	 * @throws AccumuloException 
+	 */
+	public AccumuloGraph(Configuration properties) throws AccumuloException {
+		this(AccumuloGraphConfiguration.parseProperties(properties, Const.FACTORY_PREFIX));
 	}
 
 	/**
@@ -114,7 +114,7 @@ public class AccumuloGraph implements KeyIndexableGraph {
 		}
 	}
 
-	protected static void validateOptions(AccumuloGraphOptions opts) {
+	protected static void validateOptions(AccumuloGraphOptions opts) throws AccumuloException {
 		if (opts.getConnector() == null) {
 			throw new IllegalArgumentException("Connector not set");
 		} else if (opts.getGraphTable() == null) {
@@ -122,7 +122,7 @@ public class AccumuloGraph implements KeyIndexableGraph {
 		}
 	}
 
-	protected void initScannersAndWriter() throws TableNotFoundException {
+	protected void initScannersAndWriter() throws TableNotFoundException, AccumuloException {
 		scanner = opts.getConnector().createScanner(opts.getGraphTable(), Constants.NO_AUTHS);
 		batchScanner = opts.getConnector().createBatchScanner(opts.getGraphTable(),
 				Constants.NO_AUTHS, 2);
