@@ -48,18 +48,32 @@ import com.tinkerpop.rexster.config.GraphConfigurationException;
  */
 public class AccumuloGraphConfiguration implements GraphConfiguration {
 
-	protected static final String[] REQPROPS = new String[]{
+	protected static final String[] REQUIRED_PROPERTIES = new String[]{
 		Const.INSTANCE, Const.ZOOKEEPERS,
 		Const.USERNAME, Const.PASSWORD,
-		Const.GRAPHTABLE,
+		Const.GRAPH_TABLE,
 	};
 
 	@Override
 	public Graph configureGraphInstance(Configuration properties)
 			throws GraphConfigurationException {
-		for (String prop : REQPROPS) {
+		try {
+			AccumuloGraphOptions opts = parseProperties(
+					properties, Const.REXSTER_PREFIX);
+			return new AccumuloGraph(opts);
+
+		} catch (AccumuloException e) {
+			throw new GraphConfigurationException(e);
+		}
+	}
+
+	static AccumuloGraphOptions parseProperties(Configuration properties, String prefix) throws AccumuloException {
+		// Strip out the prefix.
+		properties = properties.subset(prefix);
+
+		for (String prop : REQUIRED_PROPERTIES) {
 			if (!properties.containsKey(prop)) {
-				throw new GraphConfigurationException("Missing configuration property: "+prop);
+				throw new IllegalArgumentException("Missing configuration property: "+prop);
 			}
 		}
 
@@ -67,28 +81,23 @@ public class AccumuloGraphConfiguration implements GraphConfiguration {
 		String instance = properties.getString(Const.INSTANCE);
 		String username = properties.getString(Const.USERNAME);
 		String password = properties.getString(Const.PASSWORD);
-		String graphTable = properties.getString(Const.GRAPHTABLE);
-		String indexTable = properties.getString(Const.INDEXTABLE);
+		String graphTable = properties.getString(Const.GRAPH_TABLE);
+		String indexTable = properties.getString(Const.INDEX_TABLE);
 
 		boolean autoflush = properties.getBoolean(Const.AUTOFLUSH, true);
 		boolean mock = properties.getBoolean(Const.MOCK, false);
 		boolean returnRemovedPropertyValues =
-				properties.getBoolean(Const.RETURNREMOVEDPROPERTYVALUES, true);
+				properties.getBoolean(Const.RETURN_REMOVED_PROPERTY_VALUES, true);		
 
-		try {
-			AccumuloGraphOptions opts = new AccumuloGraphOptions();
-			opts.setConnectorInfo(instance, zookeepers, username, password);
-			opts.setGraphTable(graphTable);
-			opts.setIndexTable(indexTable);
-			opts.setAutoflush(autoflush);
-			opts.setMock(mock);
-			opts.setReturnRemovedPropertyValues(returnRemovedPropertyValues);
+		AccumuloGraphOptions opts = new AccumuloGraphOptions();
+		opts.setConnectorInfo(instance, zookeepers, username, password);
+		opts.setGraphTable(graphTable);
+		opts.setIndexTable(indexTable);
+		opts.setAutoflush(autoflush);
+		opts.setMock(mock);
+		opts.setReturnRemovedPropertyValues(returnRemovedPropertyValues);
 
-			return new AccumuloGraph(opts);
-
-		} catch (AccumuloException e) {
-			throw new GraphConfigurationException(e);
-		}
+		return opts;
 	}
 
 }

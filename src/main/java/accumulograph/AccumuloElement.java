@@ -29,11 +29,11 @@ public abstract class AccumuloElement implements Element {
 			Object id, Type type) {
 		this.parent = parent;
 		this.type = type;
-		
+
 		if (id == null) {
 			id = Utils.makeId();
 		}
-		
+
 		this.id = id;
 		this.idRow = Utils.typedObjectToText(type, id);
 	}
@@ -41,7 +41,7 @@ public abstract class AccumuloElement implements Element {
 	@Override
 	public <T> T getProperty(String key) {
 		parent.scanner.setRange(new Range(idRow));
-		parent.scanner.fetchColumn(Const.PROPERTY, Utils.stringToText(key));
+		parent.scanner.fetchColumn(Const.PROPERTY_TYPE, Utils.stringToText(key));
 		Map.Entry<Key, Value> entry = Utils.firstEntry(parent.scanner);
 		parent.scanner.clearColumns();
 		return entry != null ? Utils.<T>valueToObject(entry.getValue()) : null;
@@ -52,7 +52,7 @@ public abstract class AccumuloElement implements Element {
 		Set<String> keys = new HashSet<String>();
 
 		parent.scanner.setRange(new Range(idRow));
-		parent.scanner.fetchColumnFamily(Const.PROPERTY);
+		parent.scanner.fetchColumnFamily(Const.PROPERTY_TYPE);
 
 		for (Map.Entry<Key, Value> entry : parent.scanner) {
 			keys.add(Utils.textToString(entry.getKey().getColumnQualifier()));
@@ -77,12 +77,17 @@ public abstract class AccumuloElement implements Element {
 		else if (value == null) {
 			throw new IllegalArgumentException("Value cannot be null.");
 		}
-		
+
+		if (parent.keyIndex != null) {
+			Object oldValue = getProperty(key);
+			parent.keyIndex.removePropertyFromIndex(this, key, oldValue);
+		}
+
 		Mutation m = new Mutation(idRow);
-		m.put(Const.PROPERTY, Utils.stringToText(key),
+		m.put(Const.PROPERTY_TYPE, Utils.stringToText(key),
 				Utils.objectToValue(value));
 		Utils.addMutation(parent.writer, m);
-		
+
 		if (parent.keyIndex != null) {
 			parent.keyIndex.addPropertyToIndex(this, key, value);
 		}
@@ -91,18 +96,19 @@ public abstract class AccumuloElement implements Element {
 	@Override
 	public <T> T removeProperty(String key) {
 		T old = null;
-		
-		if (parent.opts.getReturnRemovedPropertyValues()) {
+
+		if (parent.keyIndex != null) {
+			old = getProperty(key);
+			parent.keyIndex.removePropertyFromIndex(this, key, old);
+		}
+
+		if (old == null && parent.opts.getReturnRemovedPropertyValues()) {
 			old = getProperty(key);
 		}
 
 		Mutation m = new Mutation(idRow);
-		m.putDelete(Const.PROPERTY, Utils.stringToText(key));
+		m.putDelete(Const.PROPERTY_TYPE, Utils.stringToText(key));
 		Utils.addMutation(parent.writer, m);
-		
-		if (parent.keyIndex != null) {
-			parent.keyIndex.removePropertyFromIndex(this, key);
-		}
 
 		return old;
 	}
@@ -115,7 +121,7 @@ public abstract class AccumuloElement implements Element {
 	protected Text getIdRow() {
 		return idRow;
 	}
-	
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -149,5 +155,5 @@ public abstract class AccumuloElement implements Element {
 			return false;
 		return true;
 	}
-	
+
 }

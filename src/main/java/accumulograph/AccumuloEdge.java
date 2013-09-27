@@ -24,27 +24,27 @@ public class AccumuloEdge extends AccumuloElement implements Edge {
 	protected String label;
 	
 	public AccumuloEdge(AccumuloGraph parent, Object id) {
-		super(parent, id, Type.EDGEID);
+		super(parent, id, Type.EDGE_ID);
 		
 		Text cf = new Text();
 		Text cq = new Text();
 		
 		parent.scanner.setRange(new Range(idRow));
-		parent.scanner.fetchColumnFamily(Const.EDGETYPE);
-		parent.scanner.fetchColumnFamily(Const.OUTVERTEX);
-		parent.scanner.fetchColumnFamily(Const.INVERTEX);
+		parent.scanner.fetchColumnFamily(Const.EDGE_TYPE);
+		parent.scanner.fetchColumnFamily(Const.EDGE_OUT_VERTEX);
+		parent.scanner.fetchColumnFamily(Const.EDGE_IN_VERTEX);
 		
 		for (Map.Entry<Key, Value> entry : parent.scanner) {
 			entry.getKey().getColumnFamily(cf);
 			entry.getKey().getColumnQualifier(cq);
 			
-			if (cf.equals(Const.EDGETYPE)) {
+			if (cf.equals(Const.EDGE_TYPE)) {
 				label = cq.toString();
 			}
-			else if (cf.equals(Const.OUTVERTEX)) {
+			else if (cf.equals(Const.EDGE_OUT_VERTEX)) {
 				out = new AccumuloVertex(parent, Utils.textToTypedObject(cq));
 			}
-			else if (cf.equals(Const.INVERTEX)) {
+			else if (cf.equals(Const.EDGE_IN_VERTEX)) {
 				in = new AccumuloVertex(parent, Utils.textToTypedObject(cq));
 			}
 			else {
@@ -58,7 +58,7 @@ public class AccumuloEdge extends AccumuloElement implements Edge {
 	public AccumuloEdge(AccumuloGraph parent, Object id,
 			AccumuloVertex out, AccumuloVertex in,
 			String label) {
-		super(parent, id, Type.EDGEID);
+		super(parent, id, Type.EDGE_ID);
 		this.out = out;
 		this.in = in;
 		this.label = label;

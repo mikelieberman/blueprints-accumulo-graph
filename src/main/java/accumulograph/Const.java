@@ -10,47 +10,49 @@ import org.apache.hadoop.io.Text;
 public final class Const {
 
 	private Const() {
-		
+
 	}
-	
-	// For Rexster configuration.
-	public static final String PREFIX = "properties";
-	public static final String ZOOKEEPERS = PREFIX+".zookeepers";
-	public static final String INSTANCE = PREFIX+".instance";
-	public static final String USERNAME = PREFIX+".username";
-	public static final String PASSWORD = PREFIX+".password";
-	public static final String GRAPHTABLE = PREFIX+".graphTable";
-	public static final String INDEXTABLE = PREFIX+".indexTable";
-	public static final String AUTOFLUSH = PREFIX+".autoflush";
-	public static final String MOCK = PREFIX+".mock";
-	public static final String RETURNREMOVEDPROPERTYVALUES =
-			PREFIX+".returnRemovedPropertyValues";
-	public static final String USEPROPERTYCACHE =
-			PREFIX+".usePropertyCache";
-	
+
+	// For graph configuration.
+	public static final String REXSTER_PREFIX = "properties";
+	public static final String FACTORY_PREFIX = "blueprints.accumulo";
+
+	public static final String ZOOKEEPERS = "zookeepers";
+	public static final String INSTANCE = "instance";
+	public static final String USERNAME = "username";
+	public static final String PASSWORD = "password";
+	public static final String GRAPH_TABLE = "graphTable";
+	public static final String INDEX_TABLE = "indexTable";
+	public static final String AUTOFLUSH = "autoflush";
+	public static final String MOCK = "mock";
+	public static final String RETURN_REMOVED_PROPERTY_VALUES =
+			"returnRemovedPropertyValues";
+	public static final String USE_PROPERTY_CACHE =
+			"usePropertyCache";
+
 	// Types of Accumulo records.
-	public static enum Type {METADATA, VERTEXID, EDGEID, VERTEXPROPERTY, EDGEPROPERTY};
+	public static enum Type {METADATA, VERTEX_ID, EDGE_ID, VERTEX_PROPERTY, EDGE_PROPERTY};
 
 	// Vertex-related.
-	public static final Text VERTEXTYPE = new Text("MVERTEX");
-	public static final Text OUTEDGE = new Text("EOUT");
-	public static final Text INEDGE = new Text("EIN");
-	
+	public static final Text VERTEX_TYPE = new Text("MVERTEX");
+	public static final Text VERTEX_OUT_EDGE = new Text("EOUT");
+	public static final Text VERTEX_IN_EDGE = new Text("EIN");
+
 	// Edge-related.
-	public static final Text EDGETYPE = new Text("MEDGE");
-	public static final Text OUTVERTEX = new Text("VOUT");
-	public static final Text INVERTEX = new Text("VIN");
-	
+	public static final Text EDGE_TYPE = new Text("MEDGE");
+	public static final Text EDGE_OUT_VERTEX = new Text("VOUT");
+	public static final Text EDGE_IN_VERTEX = new Text("VIN");
+
 	// Property-related.
-	public static final Text PROPERTY = new Text("PROP"); // Property signal
+	public static final Text PROPERTY_TYPE = new Text("PROP"); // Property signal
 	// Index table stuff.
-	public static final Text VERTEXPROPERTYLIST = new Text("PVLIST"); // Property lists
-	public static final Text EDGEPROPERTYLIST = new Text("PELIST"); // Property lists
-	
+	public static final Text VERTEX_PROPERTY_LIST = new Text("PVLIST"); // Property lists
+	public static final Text EDGE_PROPERTY_LIST = new Text("PELIST"); // Property lists
+
 	// Misc.
 	public static final Text EMPTY = new Text();
 	public static final Text NULL = null;
-	public static final Value EMPTYVALUE = new Value(new byte[]{});
-	public static final Value NULLVALUE = null;
-	
+	public static final Value EMPTY_VALUE = new Value(new byte[]{});
+	public static final Value NULL_VALUE = null;
+
 }

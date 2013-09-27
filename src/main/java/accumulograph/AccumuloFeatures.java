@@ -7,10 +7,8 @@ import com.tinkerpop.blueprints.Features;
  */
 public class AccumuloFeatures extends Features {
 
-	@SuppressWarnings("deprecation")
 	public AccumuloFeatures() {
 		ignoresSuppliedIds = false;
-		isRDFModel = false;
 		// TODO The graph is persistent but the unit test fails...
 		isPersistent = false;
 		isWrapper = false;
@@ -19,13 +17,13 @@ public class AccumuloFeatures extends Features {
 		supportsDuplicateEdges = true;
 		supportsEdgeIndex = false; // TODO
 		supportsEdgeIteration = true;
-		supportsEdgeKeyIndex = true; // TODO
+		supportsEdgeKeyIndex = true;
 		supportsEdgeProperties = true;
 		supportsEdgeRetrieval = true;
 		supportsFloatProperty = true;
 		supportsIndices = false; // TODO
 		supportsIntegerProperty = true;
-		supportsKeyIndices = true; // TODO
+		supportsKeyIndices = true;
 		supportsLongProperty = true;
 		supportsMapProperty = true;
 		supportsMixedListProperty = true;
@@ -38,7 +36,7 @@ public class AccumuloFeatures extends Features {
 		supportsUniformListProperty = true;
 		supportsVertexIndex = false; // TODO
 		supportsVertexIteration = true;
-		supportsVertexKeyIndex = true; // TODO
+		supportsVertexKeyIndex = true;
 		supportsVertexProperties = true;
 	}
 	

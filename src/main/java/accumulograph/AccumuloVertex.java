@@ -25,7 +25,7 @@ import com.tinkerpop.blueprints.util.DefaultVertexQuery;
 public class AccumuloVertex extends AccumuloElement implements Vertex {
 
 	public AccumuloVertex(AccumuloGraph parent, Object id) {
-		super(parent, id, Type.VERTEXID);
+		super(parent, id, Type.VERTEX_ID);
 	}
 
 	@Override
@@ -42,11 +42,11 @@ public class AccumuloVertex extends AccumuloElement implements Vertex {
 				parent.scanner.setRange(new Range(idRow));
 
 				if (takeOut(dir)) {
-					parent.scanner.fetchColumnFamily(Const.OUTEDGE);
+					parent.scanner.fetchColumnFamily(Const.VERTEX_OUT_EDGE);
 				}
 
 				if (takeIn(dir)) {
-					parent.scanner.fetchColumnFamily(Const.INEDGE);
+					parent.scanner.fetchColumnFamily(Const.VERTEX_IN_EDGE);
 				}
 
 				si = parent.scanner.iterator();
@@ -131,11 +131,11 @@ public class AccumuloVertex extends AccumuloElement implements Vertex {
 				parent.scanner.setRange(new Range(idRow));
 
 				if (takeOut(dir)) {
-					parent.scanner.fetchColumnFamily(Const.OUTEDGE);
+					parent.scanner.fetchColumnFamily(Const.VERTEX_OUT_EDGE);
 				}
 
 				if (takeIn(dir)) {
-					parent.scanner.fetchColumnFamily(Const.INEDGE);
+					parent.scanner.fetchColumnFamily(Const.VERTEX_IN_EDGE);
 				}
 
 				Iterator<Map.Entry<Key, Value>> si = parent.scanner.iterator();
@@ -173,8 +173,8 @@ public class AccumuloVertex extends AccumuloElement implements Vertex {
 
 				parent.batchScanner.setRanges(ranges);
 				// Need both endpoints of each edge.
-				parent.batchScanner.fetchColumnFamily(Const.INVERTEX);
-				parent.batchScanner.fetchColumnFamily(Const.OUTVERTEX);
+				parent.batchScanner.fetchColumnFamily(Const.EDGE_IN_VERTEX);
+				parent.batchScanner.fetchColumnFamily(Const.EDGE_OUT_VERTEX);
 				i = parent.batchScanner.iterator();
 				parent.batchScanner.clearColumns();
 
@@ -197,11 +197,11 @@ public class AccumuloVertex extends AccumuloElement implements Vertex {
 							//   adjacent in Accumulo, which does not seem robust.
 							Map.Entry<Key, Value> entry = i.next();
 							entry.getKey().getColumnFamily(endpointType);
-							entry.getKey().getColumnQualifier(endpointType.equals(Const.OUTVERTEX) ? outVertexRow : inVertexRow);
+							entry.getKey().getColumnQualifier(endpointType.equals(Const.EDGE_OUT_VERTEX) ? outVertexRow : inVertexRow);
 
 							entry = i.next();
 							entry.getKey().getColumnFamily(endpointType);
-							entry.getKey().getColumnQualifier(endpointType.equals(Const.OUTVERTEX) ? outVertexRow : inVertexRow);
+							entry.getKey().getColumnQualifier(endpointType.equals(Const.EDGE_OUT_VERTEX) ? outVertexRow : inVertexRow);
 
 							if (takeOut(dir) && outVertexRow.equals(idRow)) {
 								rowIds.add(inVertexRow);

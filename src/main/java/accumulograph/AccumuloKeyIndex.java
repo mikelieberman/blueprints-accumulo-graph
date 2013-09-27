@@ -85,12 +85,12 @@ public class AccumuloKeyIndex {
 		if (elementClass.equals(Vertex.class)) {
 			indexedKeys = indexedVertexKeys;
 			elements = (Iterable<T>) parent.getVertices();
-			propertyList = Const.VERTEXPROPERTYLIST;
+			propertyList = Const.VERTEX_PROPERTY_LIST;
 		}
 		else {
 			indexedKeys = indexedEdgeKeys;
 			elements = (Iterable<T>) parent.getEdges();
-			propertyList = Const.EDGEPROPERTYLIST;
+			propertyList = Const.EDGE_PROPERTY_LIST;
 		}
 
 		if (indexedKeys.contains(key)) {
@@ -99,7 +99,7 @@ public class AccumuloKeyIndex {
 
 		// Add to indexed key list.
 		Mutation m = new Mutation(propertyList);
-		m.put(Utils.stringToText(key), Const.EMPTY, Const.EMPTYVALUE);
+		m.put(Utils.stringToText(key), Const.EMPTY, Const.EMPTY_VALUE);
 		Utils.addMutation(indexWriter, m, 50L);
 		// Flush explicitly because this is important.
 		Utils.flush(indexWriter);
@@ -117,11 +117,11 @@ public class AccumuloKeyIndex {
 
 		if (elementClass.equals(Vertex.class)) {
 			indexedKeys = indexedVertexKeys;
-			propertyList = Const.VERTEXPROPERTYLIST;
+			propertyList = Const.VERTEX_PROPERTY_LIST;
 		}
 		else {
 			indexedKeys = indexedEdgeKeys;
-			propertyList = Const.EDGEPROPERTYLIST;
+			propertyList = Const.EDGE_PROPERTY_LIST;
 		}
 
 		if (!indexedKeys.contains(key)) {
@@ -149,13 +149,15 @@ public class AccumuloKeyIndex {
 		Type propertyType;
 
 		if (elementClass.equals(Vertex.class)) {
-			propertyType = Type.VERTEXPROPERTY;
+			propertyType = Type.VERTEX_PROPERTY;
 		}
 		else {
-			propertyType = Type.EDGEPROPERTY;
+			propertyType = Type.EDGE_PROPERTY;
 		}
 
 		indexScanner.setRange(new Range(Utils.typedObjectToText(propertyType, key)));
+		indexScanner.clearColumns();
+
 		// If specified, restrict to a specific value.
 		if (value != null) {
 			indexScanner.fetchColumnFamily(Utils.objectToText(value));
@@ -163,8 +165,6 @@ public class AccumuloKeyIndex {
 
 		final Iterator<Map.Entry<Key, Value>> i = indexScanner.iterator();
 		final Class<T> eltClass = elementClass;
-
-		indexScanner.clearColumns();
 
 		return new Iterable<T>() {
 
@@ -209,7 +209,7 @@ public class AccumuloKeyIndex {
 		return Collections.unmodifiableSet(
 				elementClass.equals(Vertex.class) ? indexedVertexKeys : indexedEdgeKeys);
 	}
-	
+
 	public <T extends Element> void addPropertyToIndex(T element, String key, Object value) {
 		Set<String> indexedKeys;
 		Type propertyType;
@@ -217,15 +217,15 @@ public class AccumuloKeyIndex {
 
 		if (element instanceof Vertex) {
 			indexedKeys = indexedVertexKeys;
-			propertyType = Type.VERTEXPROPERTY;
-			elementIdType = Type.VERTEXID;
+			propertyType = Type.VERTEX_PROPERTY;
+			elementIdType = Type.VERTEX_ID;
 		}
 		else {
 			indexedKeys = indexedEdgeKeys;
-			propertyType = Type.EDGEPROPERTY;
-			elementIdType = Type.VERTEXID;
+			propertyType = Type.EDGE_PROPERTY;
+			elementIdType = Type.VERTEX_ID;
 		}
-		
+
 		// Don't add things that are not indexed.
 		if (!indexedKeys.contains(key)) {
 			return;
@@ -233,39 +233,35 @@ public class AccumuloKeyIndex {
 
 		Mutation m = new Mutation(Utils.typedObjectToText(propertyType, key));
 		m.put(Utils.objectToText(value),
-				Utils.typedObjectToText(elementIdType, element.getId()), Const.EMPTYVALUE);
+				Utils.typedObjectToText(elementIdType, element.getId()), Const.EMPTY_VALUE);
 		Utils.addMutation(indexWriter, m);
 	}
-	
-	public <T extends Element> void removePropertyFromIndex(T element, String key) {
+
+	public <T extends Element> void removePropertyFromIndex(T element, String key, Object value) {
 		Set<String> indexedKeys;
 		Type propertyType;
 		Type elementIdType;
 
 		if (element instanceof Vertex) {
 			indexedKeys = indexedVertexKeys;
-			propertyType = Type.VERTEXPROPERTY;
-			elementIdType = Type.VERTEXID;
+			propertyType = Type.VERTEX_PROPERTY;
+			elementIdType = Type.VERTEX_ID;
 		}
 		else {
 			indexedKeys = indexedEdgeKeys;
-			propertyType = Type.EDGEPROPERTY;
-			elementIdType = Type.VERTEXID;
+			propertyType = Type.EDGE_PROPERTY;
+			elementIdType = Type.VERTEX_ID;
 		}
-		
-		// Don't remove things that are still indexed.
-		if (indexedKeys.contains(key)) {
+
+		// Don't remove things that are not indexed.
+		if (!indexedKeys.contains(key)) {
 			return;
 		}
-		
-		Object value = element.getProperty(key);
-		
-		if (value != null) {
-			Mutation m = new Mutation(Utils.typedObjectToText(propertyType, key));
-			m.putDelete(Utils.objectToText(value),
-					Utils.typedObjectToText(elementIdType, element.getId()));
-			Utils.addMutation(indexWriter, m);	
-		}
+
+		Mutation m = new Mutation(Utils.typedObjectToText(propertyType, key));
+		m.putDelete(Utils.objectToText(value),
+				Utils.typedObjectToText(elementIdType, element.getId()));
+		Utils.addMutation(indexWriter, m);	
 	}
 
 	public <T extends Element> void reindexKey(T element, String key, Object value) {
@@ -275,20 +271,20 @@ public class AccumuloKeyIndex {
 
 		if (element instanceof Vertex) {
 			indexedKeys = indexedVertexKeys;
-			propertyType = Type.VERTEXPROPERTY;
-			elementIdType = Type.VERTEXID;
+			propertyType = Type.VERTEX_PROPERTY;
+			elementIdType = Type.VERTEX_ID;
 		}
 		else {
 			indexedKeys = indexedEdgeKeys;
-			propertyType = Type.EDGEPROPERTY;
-			elementIdType = Type.VERTEXID;
+			propertyType = Type.EDGE_PROPERTY;
+			elementIdType = Type.VERTEX_ID;
 		}
 
 		Mutation m = new Mutation(Utils.typedObjectToText(propertyType, key));
-		
+
 		if (indexedKeys.contains(key)) {
 			m.put(Utils.objectToText(value),
-					Utils.typedObjectToText(elementIdType, element.getId()), Const.EMPTYVALUE);
+					Utils.typedObjectToText(elementIdType, element.getId()), Const.EMPTY_VALUE);
 		}
 		else {
 			m.putDelete(Utils.objectToText(value),
@@ -305,13 +301,13 @@ public class AccumuloKeyIndex {
 
 		if (element instanceof Vertex) {
 			indexedKeys = indexedVertexKeys;
-			propertyType = Type.VERTEXPROPERTY;
-			elementIdType = Type.VERTEXID;
+			propertyType = Type.VERTEX_PROPERTY;
+			elementIdType = Type.VERTEX_ID;
 		}
 		else {
 			indexedKeys = indexedEdgeKeys;
-			propertyType = Type.EDGEPROPERTY;
-			elementIdType = Type.EDGEID;
+			propertyType = Type.EDGE_PROPERTY;
+			elementIdType = Type.EDGE_ID;
 		}
 
 		Text eltIdCq = Utils.typedObjectToText(elementIdType, element.getId());
@@ -323,14 +319,14 @@ public class AccumuloKeyIndex {
 				Mutation m = new Mutation(Utils.typedObjectToText(propertyType, key));
 
 				if (add) {
-					m.put(Utils.objectToText(value), eltIdCq, Const.EMPTYVALUE);
+					m.put(Utils.objectToText(value), eltIdCq, Const.EMPTY_VALUE);
 				}
 				else {
 					// TODO This is executing, but not actually deleting
 					//   from the index table.
 					m.putDelete(Utils.objectToText(value), eltIdCq);
 				}
-				
+
 				Utils.addMutation(indexWriter, m);
 			}
 		}
@@ -339,15 +335,23 @@ public class AccumuloKeyIndex {
 	private void reloadIndexedKeys() {
 		Text cf = new Text();
 
+
 		indexedVertexKeys.clear();
-		indexScanner.setRange(new Range(Const.VERTEXPROPERTYLIST));
+
+		indexScanner.setRange(new Range(Const.VERTEX_PROPERTY_LIST));
+		indexScanner.clearColumns();
+
 		for (Map.Entry<Key, Value> entry : indexScanner) {
 			entry.getKey().getColumnFamily(cf);
 			indexedVertexKeys.add(Utils.textToString(cf));
 		}
 
+
 		indexedEdgeKeys.clear();
-		indexScanner.setRange(new Range(Const.EDGEPROPERTYLIST));
+
+		indexScanner.setRange(new Range(Const.EDGE_PROPERTY_LIST));
+		indexScanner.clearColumns();
+
 		for (Map.Entry<Key, Value> entry : indexScanner) {
 			entry.getKey().getColumnFamily(cf);
 			indexedEdgeKeys.add(Utils.textToString(cf));
