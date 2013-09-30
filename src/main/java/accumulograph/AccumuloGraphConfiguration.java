@@ -76,7 +76,7 @@ public class AccumuloGraphConfiguration implements GraphConfiguration {
 				throw new IllegalArgumentException("Missing configuration property: "+prop);
 			}
 		}
-		
+
 		String zookeepers = properties.getString(Const.ZOOKEEPERS);
 		String instance = properties.getString(Const.INSTANCE);
 		String username = properties.getString(Const.USERNAME);

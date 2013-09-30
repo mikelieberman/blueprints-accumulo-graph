@@ -5,7 +5,7 @@ This is an implementation of the Tinkerpop Blueprints API backed by
 Accumulo.  The graph is stored in a single table in Accumulo.  This
 implementation has support for key/value indexing and some performance
 tweaks.  If indexing is enabled, the index is stored in a separate
-table.  Everything is serialized using Kryo.
+table.
 
 
 How to use it

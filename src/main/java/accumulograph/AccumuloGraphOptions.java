@@ -154,9 +154,9 @@ public class AccumuloGraphOptions {
 	@Override
 	public String toString() {
 		return "AccumuloGraphOptions [instance=" + instance + ", zookeepers="
-				+ zookeepers + ", graphTable=" + graphTable + ", indexTable="
-				+ indexTable + ", mock=" + mock + ", autoflush=" + autoflush
-				+ ", returnRemovedPropertyValues="
+				+ zookeepers + ", username=" + username + ", graphTable="
+				+ graphTable + ", indexTable=" + indexTable + ", mock=" + mock
+				+ ", autoflush=" + autoflush + ", returnRemovedPropertyValues="
 				+ returnRemovedPropertyValues + "]";
 	}
 

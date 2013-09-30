@@ -2,6 +2,9 @@ package accumulograph;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -24,17 +27,11 @@ import org.apache.hadoop.io.Text;
 
 import accumulograph.Const.Type;
 
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.io.Input;
-import com.esotericsoftware.kryo.io.Output;
-
 /**
  * Various utility methods.
  * @author Mike Lieberman (http://mikelieberman.org)
  */
 public final class Utils {
-
-	private static final Kryo KRYO = new Kryo();
 
 	private Utils() {
 
@@ -45,19 +42,31 @@ public final class Utils {
 	}
 
 	public static <T> byte[] toBytes(T obj) {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		Output output = new Output(baos);
-		KRYO.writeClassAndObject(output, obj);
-		output.close();
-		return baos.toByteArray();
+		try {
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			ObjectOutputStream oos = new ObjectOutputStream(baos);
+			oos.writeObject(obj);
+			oos.close();
+			return baos.toByteArray();
+
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	public static <T> T fromBytes(byte[] bytes) {
-		Input input = new Input(new ByteArrayInputStream(bytes));
-		@SuppressWarnings("unchecked")
-		T obj = (T) KRYO.readClassAndObject(input);
-		input.close();
-		return obj;
+		try {
+			ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(bytes));
+			@SuppressWarnings("unchecked")
+			T obj = (T) ois.readObject();
+			ois.close();
+			return obj;
+
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		} catch (ClassNotFoundException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	public static <T> Value objectToValue(T obj) {
@@ -81,7 +90,7 @@ public final class Utils {
 		// Read past type code at beginning.
 		return fromBytes(Arrays.copyOfRange(bytes, 1, bytes.length));
 	}
-	
+
 	public static Value textToValue(Text text) {
 		return new Value(text.getBytes());
 	}
@@ -97,23 +106,23 @@ public final class Utils {
 	public static String textToString(Text text) {
 		return text.toString();
 	}
-	
+
 	public static Value stringToValue(String str) {
 		return new Value(str.getBytes());
 	}
-	
+
 	public static String valueToString(Value value) {
 		return new String(value.get());
 	}
-	
+
 	public static <T> Text objectToText(T obj) {
 		return new Text(toBytes(obj));
 	}
-	
+
 	public static <T> T textToObject(Text text) {
 		return fromBytes(text.getBytes());
 	}
-	
+
 	public static void addMutation(BatchWriter writer, Mutation mut) {
 		addMutation(writer, mut, 0L);
 	}
@@ -128,7 +137,7 @@ public final class Utils {
 			throw new RuntimeException(e);
 		}
 	}
-	
+
 	public static void flush(BatchWriter writer) {
 		try {
 			writer.flush();
@@ -141,23 +150,23 @@ public final class Utils {
 		Iterator<Map.Entry<Key, Value>> i = scanner.iterator();
 		return i.hasNext() ? i.next() : null;
 	}
-	
+
 	public static void deleteAllEntries(Scanner scanner, BatchWriter writer) {
 		Text row = new Text();
 		Text cf = new Text();
 		Text cq = new Text();
-		
+
 		for (Map.Entry<Key, Value> entry : scanner) {
 			entry.getKey().getRow(row);
 			entry.getKey().getColumnFamily(cf);
 			entry.getKey().getColumnQualifier(cq);
-			
+
 			Mutation m = new Mutation(row);
 			m.putDelete(cf, cq);
 			addMutation(writer, m);
 		}
 	}
-	
+
 	public static void createTableIfNotExists(Connector conn, String table) throws AccumuloException, AccumuloSecurityException, TableExistsException {
 		// Check whether table exists already and create if not.
 		TableOperations ops = conn.tableOperations();
@@ -165,18 +174,18 @@ public final class Utils {
 			ops.create(table);
 		}
 	}
-	
+
 	public static void recreateTable(Connector conn, String table)
 			throws AccumuloException, AccumuloSecurityException, TableNotFoundException, TableExistsException {
 		TableOperations ops = conn.tableOperations();
-		
+
 		if (ops.exists(table)) {
 			ops.delete(table);
 		}
-		
+
 		ops.create(table);
 	}
-	
+
 	public static void sleep(long millis) {
 		try {
 			Thread.sleep(millis);
