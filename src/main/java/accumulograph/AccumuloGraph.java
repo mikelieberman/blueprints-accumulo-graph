@@ -163,13 +163,13 @@ public class AccumuloGraph implements KeyIndexableGraph {
 		AccumuloVertex vertex = new AccumuloVertex(this, id);
 
 		// Add vertex.
-		Mutation m = new Mutation(vertex.getIdRow());
+		Mutation m = new Mutation(AccumuloIdManager.toText(vertex));
 		m.put(Const.VERTEX_SIGNAL, Const.EMPTY_TEXT, Const.EMPTY_VALUE);
 		Utils.addMutation(writer, m);
 
 		// Add to vertex list.
 		m = new Mutation(Const.VERTEX_SIGNAL);
-		m.put(vertex.getIdRow(), Const.EMPTY_TEXT, Const.EMPTY_VALUE);
+		m.put(AccumuloIdManager.toText(vertex), Const.EMPTY_TEXT, Const.EMPTY_VALUE);
 		Utils.addMutation(writer, m);
 
 		if (keyIndex != null) {
@@ -205,11 +205,11 @@ public class AccumuloGraph implements KeyIndexableGraph {
 
 		// Remove from vertex list.
 		Mutation m = new Mutation(Const.VERTEX_SIGNAL);
-		m.putDelete(v.getIdRow(), Const.EMPTY_TEXT);
+		m.putDelete(AccumuloIdManager.toText(v), Const.EMPTY_TEXT);
 		Utils.addMutation(writer, m);
 
 		// Everything else related to vertex.
-		m = new Mutation(v.getIdRow());
+		m = new Mutation(AccumuloIdManager.toText(v));
 		m.putDelete(Const.EMPTY_TEXT, Const.EMPTY_TEXT);
 		Utils.addMutation(writer, m);
 	}
@@ -313,7 +313,7 @@ public class AccumuloGraph implements KeyIndexableGraph {
 		AccumuloEdge edge = new AccumuloEdge(this, id, out, in, label);
 
 		// Add the edge and its information.
-		Mutation m = new Mutation(edge.getIdRow());
+		Mutation m = new Mutation(AccumuloIdManager.toText(edge));
 		m.put(Const.EDGE_SIGNAL, Utils.stringToText(label), Const.EMPTY_VALUE);
 		m.put(Const.EDGE_OUT_VERTEX, AccumuloIdManager.toText(out), Const.EMPTY_VALUE);
 		m.put(Const.EDGE_IN_VERTEX, AccumuloIdManager.toText(in), Const.EMPTY_VALUE);
@@ -321,18 +321,18 @@ public class AccumuloGraph implements KeyIndexableGraph {
 
 		// Add to edge list.
 		m = new Mutation(Const.EDGE_SIGNAL);
-		m.put(edge.getIdRow(), Const.EMPTY_TEXT, Const.EMPTY_VALUE);
+		m.put(AccumuloIdManager.toText(edge), Const.EMPTY_TEXT, Const.EMPTY_VALUE);
 		Utils.addMutation(writer, m);
 
 		// Update out vertex.
-		m = new Mutation(out.getIdRow());
-		m.put(Const.VERTEX_OUT_EDGE, edge.getIdRow(),
+		m = new Mutation(AccumuloIdManager.toText(out));
+		m.put(Const.VERTEX_OUT_EDGE, AccumuloIdManager.toText(edge),
 				Utils.stringToValue(label));
 		Utils.addMutation(writer, m);
 
 		// Update in vertex.
-		m = new Mutation(in.getIdRow());
-		m.put(Const.VERTEX_IN_EDGE, edge.getIdRow(),
+		m = new Mutation(AccumuloIdManager.toText(in));
+		m.put(Const.VERTEX_IN_EDGE, AccumuloIdManager.toText(edge),
 				Utils.stringToValue(label));
 		Utils.addMutation(writer, m);
 
@@ -366,21 +366,21 @@ public class AccumuloGraph implements KeyIndexableGraph {
 		AccumuloVertex in = (AccumuloVertex) e.getVertex(Direction.IN);
 
 		// Remove edge info from out/in vertices.
-		Mutation m = new Mutation(out.getIdRow());
-		m.putDelete(Const.VERTEX_OUT_EDGE, e.getIdRow());
+		Mutation m = new Mutation(AccumuloIdManager.toText(out));
+		m.putDelete(Const.VERTEX_OUT_EDGE, AccumuloIdManager.toText(e));
 		Utils.addMutation(writer, m);
 
-		m = new Mutation(in.getIdRow());
-		m.putDelete(Const.VERTEX_IN_EDGE, e.getIdRow());
+		m = new Mutation(AccumuloIdManager.toText(in));
+		m.putDelete(Const.VERTEX_IN_EDGE, AccumuloIdManager.toText(e));
 		Utils.addMutation(writer, m);
 
 		// Remove from edge list.
 		m = new Mutation(Const.EDGE_SIGNAL);
-		m.putDelete(e.getIdRow(), Const.EMPTY_TEXT);
+		m.putDelete(AccumuloIdManager.toText(e), Const.EMPTY_TEXT);
 		Utils.addMutation(writer, m);
 
 		// Remove everything else.
-		m = new Mutation(e.getIdRow());
+		m = new Mutation(AccumuloIdManager.toText(e));
 		m.putDelete(Const.EMPTY_TEXT, Const.EMPTY_TEXT);
 	}
 

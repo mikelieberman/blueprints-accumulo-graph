@@ -116,10 +116,6 @@ public abstract class AccumuloElement implements Element {
 		return type;
 	}
 
-	protected Text getIdRow() {
-		return idRow;
-	}
-
 	@Override
 	public int hashCode() {
 		final int prime = 31;
