@@ -16,7 +16,6 @@ import org.apache.accumulo.core.client.TableExistsException;
 import org.apache.accumulo.core.client.TableNotFoundException;
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Mutation;
-import org.apache.accumulo.core.data.PartialKey;
 import org.apache.accumulo.core.data.Range;
 import org.apache.accumulo.core.data.Value;
 import org.apache.commons.configuration.Configuration;
@@ -48,8 +47,6 @@ import com.tinkerpop.blueprints.util.PropertyFilteredIterable;
 	 <tr><td>[edge id]</td><td>VOUT</td><td>[vertex id]</td><td>-</td><td>Edge's out-vertex</td></tr>
 	 <tr><td>[edge id]</td><td>VIN</td><td>[vertex id]</td><td>-</td><td>Edge's in-vertex</td></tr>
 	 <tr><td>[v/e id]</td><td>PROP</td><td>[property name]</td><td>[property value]</td><td>Property</td></tr>
-	 <tr><td>MVERTEX</td><td>[vertex id]</td><td>-</td><td>-</td><td>For vertex list</td></tr>
-	 <tr><td>MEDGE</td><td>[edge id]</td><td>-</td><td>-</td><td>For edge list</td></tr>
     </table>
  * 
  * @author Mike Lieberman (http://mikelieberman.org)
@@ -167,11 +164,6 @@ public class AccumuloGraph implements KeyIndexableGraph {
 		m.put(Const.VERTEX_SIGNAL, Const.EMPTY_TEXT, Const.EMPTY_VALUE);
 		Utils.addMutation(writer, m);
 
-		// Add to vertex list.
-		m = new Mutation(Const.VERTEX_SIGNAL);
-		m.put(AccumuloIdManager.toText(vertex), Const.EMPTY_TEXT, Const.EMPTY_VALUE);
-		Utils.addMutation(writer, m);
-
 		if (keyIndex != null) {
 			keyIndex.addOrRemoveFromIndex(vertex, true);
 		}
@@ -203,15 +195,9 @@ public class AccumuloGraph implements KeyIndexableGraph {
 			removeEdge(edge);
 		}
 
-		// Remove from vertex list.
-		Mutation m = new Mutation(Const.VERTEX_SIGNAL);
-		m.putDelete(AccumuloIdManager.toText(v), Const.EMPTY_TEXT);
-		Utils.addMutation(writer, m);
-
-		// Everything else related to vertex.
-		m = new Mutation(AccumuloIdManager.toText(v));
-		m.putDelete(Const.EMPTY_TEXT, Const.EMPTY_TEXT);
-		Utils.addMutation(writer, m);
+		// Remove everything else related to vertex.
+		Utils.addMutation(writer,
+				Utils.deleteRow(AccumuloIdManager.toText(v)));
 	}
 
 	@Override
@@ -234,30 +220,32 @@ public class AccumuloGraph implements KeyIndexableGraph {
 
 		return new Iterable<Vertex>() {
 			private Iterator<Map.Entry<Key, Value>> iterator;
-			private Text eltIdCf = new Text();
+			private Text eltId = new Text();
 
 			@Override
 			public Iterator<Vertex> iterator() {
 				Key minKey;
 				if (minId == null) {
-					minKey = new Key(Const.VERTEX_SIGNAL);
+					minKey = new Key(AccumuloIdManager.toIdPrefix(ElementType.VERTEX));
 				} else {
-					minKey = new Key(Const.VERTEX_SIGNAL,
+					minKey = new Key(AccumuloIdManager.toIdPrefix(ElementType.VERTEX),
 							AccumuloIdManager.toText(
 									new AccumuloElementId(minId), ElementType.VERTEX));
 				}
 
 				Key maxKey;
 				if (maxId == null) {
-					maxKey = minKey.followingKey(PartialKey.ROW);
+					maxKey = new Key(AccumuloIdManager.afterIdPrefix(ElementType.VERTEX));
 				} else {
-					maxKey = new Key(Const.VERTEX_SIGNAL,
+					maxKey = new Key(AccumuloIdManager.toIdPrefix(ElementType.VERTEX),
 							AccumuloIdManager.toText(
 									new AccumuloElementId(maxId), ElementType.VERTEX));
 				}
 
 				scanner.setRange(new Range(minKey, maxKey));
+				scanner.fetchColumnFamily(Const.VERTEX_SIGNAL);
 				iterator = scanner.iterator();
+				scanner.clearColumns();
 
 				return new Iterator<Vertex>() {
 
@@ -272,8 +260,8 @@ public class AccumuloGraph implements KeyIndexableGraph {
 							throw new NoSuchElementException();
 						}
 
-						iterator.next().getKey().getColumnFamily(eltIdCf);
-						return makeVertex(eltIdCf);
+						iterator.next().getKey().getRow(eltId);
+						return makeVertex(eltId);
 					}
 
 					@Override
@@ -319,11 +307,6 @@ public class AccumuloGraph implements KeyIndexableGraph {
 		m.put(Const.EDGE_IN_VERTEX, AccumuloIdManager.toText(in), Const.EMPTY_VALUE);
 		Utils.addMutation(writer, m);
 
-		// Add to edge list.
-		m = new Mutation(Const.EDGE_SIGNAL);
-		m.put(AccumuloIdManager.toText(edge), Const.EMPTY_TEXT, Const.EMPTY_VALUE);
-		Utils.addMutation(writer, m);
-
 		// Update out vertex.
 		m = new Mutation(AccumuloIdManager.toText(out));
 		m.put(Const.VERTEX_OUT_EDGE, AccumuloIdManager.toText(edge),
@@ -362,26 +345,25 @@ public class AccumuloGraph implements KeyIndexableGraph {
 			keyIndex.addOrRemoveFromIndex(e, false);
 		}
 
-		AccumuloVertex out = (AccumuloVertex) e.getVertex(Direction.OUT);
-		AccumuloVertex in = (AccumuloVertex) e.getVertex(Direction.IN);
-
 		// Remove edge info from out/in vertices.
-		Mutation m = new Mutation(AccumuloIdManager.toText(out));
-		m.putDelete(Const.VERTEX_OUT_EDGE, AccumuloIdManager.toText(e));
-		Utils.addMutation(writer, m);
+		// These may be null due to self loops, so need to check.
+		AccumuloVertex out = (AccumuloVertex) e.getVertex(Direction.OUT);
+		if (out != null) {
+			Mutation m = new Mutation(AccumuloIdManager.toText(out));
+			m.putDelete(Const.VERTEX_OUT_EDGE, AccumuloIdManager.toText(e));
+			Utils.addMutation(writer, m);
+		}
 
-		m = new Mutation(AccumuloIdManager.toText(in));
-		m.putDelete(Const.VERTEX_IN_EDGE, AccumuloIdManager.toText(e));
-		Utils.addMutation(writer, m);
+		AccumuloVertex in = (AccumuloVertex) e.getVertex(Direction.IN);
+		if (in != null) {
+			Mutation m = new Mutation(AccumuloIdManager.toText(in));
+			m.putDelete(Const.VERTEX_IN_EDGE, AccumuloIdManager.toText(e));
+			Utils.addMutation(writer, m);
+		}
 
-		// Remove from edge list.
-		m = new Mutation(Const.EDGE_SIGNAL);
-		m.putDelete(AccumuloIdManager.toText(e), Const.EMPTY_TEXT);
-		Utils.addMutation(writer, m);
-
-		// Remove everything else.
-		m = new Mutation(AccumuloIdManager.toText(e));
-		m.putDelete(Const.EMPTY_TEXT, Const.EMPTY_TEXT);
+		// Remove everything else related to edge.
+		Utils.addMutation(writer,
+				Utils.deleteRow(AccumuloIdManager.toText(e)));
 	}
 
 	@Override
@@ -398,28 +380,30 @@ public class AccumuloGraph implements KeyIndexableGraph {
 
 		return new Iterable<Edge>() {
 			private Iterator<Map.Entry<Key, Value>> iterator;
-			private Text eltIdCf = new Text();
+			private Text eltId = new Text();
 
 			@Override
 			public Iterator<Edge> iterator() {
 				Key minKey;
 				if (minId == null) {
-					minKey = new Key(Const.EDGE_SIGNAL);
+					minKey = new Key(AccumuloIdManager.toIdPrefix(ElementType.EDGE));
 				} else {
-					minKey = new Key(Const.EDGE_SIGNAL,
+					minKey = new Key(AccumuloIdManager.toIdPrefix(ElementType.EDGE),
 							AccumuloIdManager.toText(new AccumuloElementId(minId), ElementType.EDGE));
 				}
 
 				Key maxKey;
 				if (maxId == null) {
-					maxKey = minKey.followingKey(PartialKey.ROW);
+					maxKey = new Key(AccumuloIdManager.afterIdPrefix(ElementType.EDGE));
 				} else {
-					maxKey = new Key(Const.EDGE_SIGNAL,
+					maxKey = new Key(AccumuloIdManager.toIdPrefix(ElementType.EDGE),
 							AccumuloIdManager.toText(new AccumuloElementId(maxId), ElementType.EDGE));
 				}
 
 				scanner.setRange(new Range(minKey, maxKey));
+				scanner.fetchColumnFamily(Const.EDGE_SIGNAL);
 				iterator = scanner.iterator();
+				scanner.clearColumns();
 
 				return new Iterator<Edge>() {
 
@@ -434,8 +418,8 @@ public class AccumuloGraph implements KeyIndexableGraph {
 							throw new NoSuchElementException();
 						}
 
-						iterator.next().getKey().getColumnFamily(eltIdCf);
-						return makeEdge(eltIdCf);
+						iterator.next().getKey().getRow(eltId);
+						return makeEdge(eltId);
 					}
 
 					@Override
@@ -453,7 +437,6 @@ public class AccumuloGraph implements KeyIndexableGraph {
 		};
 	}
 
-	// TODO: Use indexes
 	@Override
 	public Iterable<Edge> getEdges(String key, Object value) {
 		if (keyIndex != null && keyIndex.getIndexedKeys(AccumuloEdge.class).contains(key)) {

@@ -73,17 +73,18 @@ these timing issues as much as possible, but there may still be issues
 with this, and it needs more testing.
 
 
-Todo
+TODO
 ----
 
+* Hadoop integration.
 * Read-only usage.  This will enforce only read operations, and would
   allow caching strategies, and avoid timing issues.
 * Element/property cache, to increase performance for read-only
   usage.
+* Bulk loading of graph elements.
 * Regular-style indexes, in addition to key/value index.
 * Tuned querying.
-* Bulk loading of graph elements.
-* Detailed benchmarking.
+* Benchmarking.
 * Documentation.
 
 
@@ -94,11 +95,9 @@ The graph is stored in a single table with the following schema.
 
 <table>
 <tr><th>Row</th>        <th>CF</th>         <th>CQ</th>         <th>Val</th>        <th>Purpose</th></tr>
-<tr><td>MVERTEX</td>    <td>[v id]</td>     <td>-</td>          <td>-</td>          <td>Global vertex list</td></tr>
 <tr><td>[v id]</td>     <td>MVERTEX</td>    <td>-</td>          <td>-</td>          <td>Vertex id</td></tr>
 <tr><td>[v id]</td>     <td>EOUT</td>       <td>[e id]</td>     <td>[e label]</td>  <td>Vertex out-edge</td></tr>
 <tr><td>[v id]</td>     <td>EIN</td>        <td>[e id]</td>     <td>[e label]</td>  <td>Vertex in-edge</td></tr>
-<tr><td>MEDGE</td>      <td>[e id]</td>     <td>-</td>          <td>-</td>          <td>Global edge list</td></tr>
 <tr><td>[e id]</td>     <td>MEDGE</td>      <td>[e label]</td>  <td>-</td>          <td>Edge id</td></tr>
 <tr><td>[e id]</td>     <td>VOUT</td>       <td>[v id]</td>     <td>-</td>          <td>Edge out-vertex</td></tr>
 <tr><td>[e id]</td>     <td>VIN</td>        <td>[v id]</td>     <td>-</td>          <td>Edge in-vertex</td></tr>

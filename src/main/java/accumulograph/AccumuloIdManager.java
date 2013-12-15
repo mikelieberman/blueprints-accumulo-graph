@@ -16,6 +16,38 @@ import accumulograph.Const.ElementType;
 public class AccumuloIdManager {
 
 	/**
+	 * Return the appropriate id prefix for the given type.
+	 * This can be used in range searches (e.g. for all vertices).
+	 * @param type
+	 * @return
+	 */
+	public static Text toIdPrefix(ElementType type) {
+		if (type == ElementType.VERTEX) {
+			return new Text(Const.VERTEX_ID_PREFIX);
+		} else if (type == ElementType.EDGE) {
+			return new Text(Const.EDGE_ID_PREFIX);
+		} else {
+			throw new IllegalArgumentException("Unrecognized type");
+		}
+	}
+	
+	/**
+	 * Get a sentinel value indicating we have reached the end
+	 * of vertices/edges in the table.
+	 * @param type
+	 * @return
+	 */
+	public static Text afterIdPrefix(ElementType type) {
+		if (type == ElementType.VERTEX) {
+			return new Text(Const.VERTEX_ID_PREFIX_AFTER);
+		} else if (type == ElementType.EDGE) {
+			return new Text(Const.EDGE_ID_PREFIX_AFTER);
+		} else {
+			throw new IllegalArgumentException("Unrecognized type");
+		}		
+	}
+	
+	/**
 	 * Take an element and compute the Text value from its id.
 	 * @param element The element
 	 * @return

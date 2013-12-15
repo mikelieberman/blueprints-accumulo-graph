@@ -30,24 +30,35 @@ public final class Const {
 	public static final String USE_PROPERTY_CACHE =
 			"usePropertyCache";
 
-	// Element-related items.
+
+	// Type of element.
 	public static enum ElementType {VERTEX, EDGE};
 
+	// Vertex-related items.
 	public static final String VERTEX_ID_PREFIX = "V";
+	// This is a value indicating we have reached the end of vertices in the table.
+	public static final String VERTEX_ID_PREFIX_AFTER = "W";
+
 	public static final Text VERTEX_SIGNAL = new Text("MVERTEX");
 	public static final Text VERTEX_OUT_EDGE = new Text("EOUT");
 	public static final Text VERTEX_IN_EDGE = new Text("EIN");
 
+	// Edge-related items.
 	public static final String EDGE_ID_PREFIX = "E";
+	// This is a value indicating we have reached the end of edges in the table.
+	public static final String EDGE_ID_PREFIX_AFTER = "F";
+
 	public static final Text EDGE_SIGNAL = new Text("MEDGE");
 	public static final Text EDGE_OUT_VERTEX = new Text("VOUT");
 	public static final Text EDGE_IN_VERTEX = new Text("VIN");
+
 
 	// Property-related.
 	public static final Text PROPERTY_SIGNAL = new Text("PROP");
 	// Index table stuff.
 	public static final Text VERTEX_PROPERTY_LIST = new Text("PVLIST"); // Property lists
 	public static final Text EDGE_PROPERTY_LIST = new Text("PELIST"); // Property lists
+
 
 	// Misc.
 	public static final Text EMPTY_TEXT = new Text();

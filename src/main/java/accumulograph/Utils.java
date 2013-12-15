@@ -12,6 +12,7 @@ import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.BatchWriter;
 import org.apache.accumulo.core.client.Connector;
+import org.apache.accumulo.core.client.IteratorSetting;
 import org.apache.accumulo.core.client.MutationsRejectedException;
 import org.apache.accumulo.core.client.Scanner;
 import org.apache.accumulo.core.client.TableExistsException;
@@ -20,6 +21,7 @@ import org.apache.accumulo.core.client.admin.TableOperations;
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Mutation;
 import org.apache.accumulo.core.data.Value;
+import org.apache.accumulo.core.iterators.user.RowDeletingIterator;
 import org.apache.hadoop.io.Text;
 
 /**
@@ -144,11 +146,15 @@ public final class Utils {
 		}
 	}
 
-	public static void createTableIfNotExists(Connector conn, String table) throws AccumuloException, AccumuloSecurityException, TableExistsException {
+	public static void createTableIfNotExists(Connector conn, String table)
+			throws AccumuloException, AccumuloSecurityException, TableExistsException, TableNotFoundException {
 		// Check whether table exists already and create if not.
 		TableOperations ops = conn.tableOperations();
 		if (!ops.exists(table)) {
 			ops.create(table);
+
+			// Attach a deleting iterator to make deletes easier.
+			ops.attachIterator(table, new IteratorSetting(10, RowDeletingIterator.class));
 		}
 	}
 
@@ -160,7 +166,19 @@ public final class Utils {
 			ops.delete(table);
 		}
 
-		ops.create(table);
+		createTableIfNotExists(conn, table);
+	}
+
+	/**
+	 * Create a Mutation that will delete all keys with given row.
+	 * This leverages the {@link RowDeletingIterator}.
+	 * @param row
+	 * @return
+	 */
+	public static Mutation deleteRow(Text row) {
+		Mutation m = new Mutation(row);
+		m.put(Const.EMPTY_TEXT, Const.EMPTY_TEXT, RowDeletingIterator.DELETE_ROW_VALUE);
+		return m;
 	}
 
 	public static void sleep(long millis) {
