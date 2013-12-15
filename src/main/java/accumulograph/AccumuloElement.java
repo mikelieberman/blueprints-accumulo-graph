@@ -19,18 +19,13 @@ import com.tinkerpop.blueprints.Element;
 public abstract class AccumuloElement implements Element {
 
 	protected AccumuloGraph parent;
-	protected Object id;
+	protected AccumuloElementId id;
 	protected Text idRow;
 
 	protected AccumuloElement(AccumuloGraph parent, Object id) {
 		this.parent = parent;
-
-		if (id == null) {
-			id = Utils.makeId();
-		}
-
-		this.id = id;
-		this.idRow = Utils.elementIdToText(id);
+		this.id = new AccumuloElementId(id);
+		this.idRow = Utils.elementIdToText(this.id);
 	}
 
 	@Override
@@ -109,7 +104,7 @@ public abstract class AccumuloElement implements Element {
 	}
 
 	@Override
-	public Object getId() {
+	public AccumuloElementId getId() {
 		return id;
 	}
 

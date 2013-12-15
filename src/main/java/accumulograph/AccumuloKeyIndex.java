@@ -21,9 +21,6 @@ import org.apache.accumulo.core.data.Range;
 import org.apache.accumulo.core.data.Value;
 import org.apache.hadoop.io.Text;
 
-import com.tinkerpop.blueprints.Element;
-import com.tinkerpop.blueprints.Vertex;
-
 /**
  * Key index implementation.  The key index is stored in
  * a separate table, specified using options.
@@ -75,12 +72,12 @@ public class AccumuloKeyIndex {
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T extends Element> void createKeyIndex(String key, Class<T> elementClass) {
+	public <T extends AccumuloElement> void createKeyIndex(String key, Class<T> elementClass) {
 		Set<String> indexedKeys;
 		Iterable<T> elements;
 		Text propertyList;
 
-		if (elementClass.equals(Vertex.class)) {
+		if (elementClass.equals(AccumuloVertex.class)) {
 			indexedKeys = indexedVertexKeys;
 			elements = (Iterable<T>) parent.getVertices();
 			propertyList = Const.VERTEX_PROPERTY_LIST;
@@ -104,16 +101,16 @@ public class AccumuloKeyIndex {
 		reloadIndexedKeys();
 
 		// Find elements and do stuff.
-		for (Element element : elements) {
+		for (AccumuloElement element : elements) {
 			addOrRemoveFromIndex(element, true);
 		}
 	}
 
-	public <T extends Element> void dropKeyIndex(String key, Class<T> elementClass) {
+	public <T extends AccumuloElement> void dropKeyIndex(String key, Class<T> elementClass) {
 		Set<String> indexedKeys;
 		Text propertyList;
 
-		if (elementClass.equals(Vertex.class)) {
+		if (elementClass.equals(AccumuloVertex.class)) {
 			indexedKeys = indexedVertexKeys;
 			propertyList = Const.VERTEX_PROPERTY_LIST;
 		}
@@ -127,7 +124,7 @@ public class AccumuloKeyIndex {
 		}
 
 		// Remove elements with this key in the index.
-		for (Element element : getElements(key, null, elementClass)) {
+		for (AccumuloElement element : getElements(key, null, elementClass)) {
 			// TODO This doesn't remove stuff from the index table.
 			addOrRemoveFromIndex(element, false);
 		}
@@ -142,7 +139,7 @@ public class AccumuloKeyIndex {
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T extends Element> Iterable<T> getElements(String key, Object value,
+	public <T extends AccumuloElement> Iterable<T> getElements(String key, Object value,
 			Class<T> elementClass) {
 		indexScanner.setRange(new Range(Utils.stringToText(key)));
 		indexScanner.clearColumns();
@@ -177,7 +174,7 @@ public class AccumuloKeyIndex {
 						Map.Entry<Key, Value> entry = i.next();
 						entry.getKey().getColumnQualifier(eltIdCq);
 
-						if (eltClass.equals(Vertex.class)) {
+						if (eltClass.equals(AccumuloVertex.class)) {
 							return (T) new AccumuloVertex(parent, Utils.textToElementId(eltIdCq));
 						}
 						else {
@@ -194,14 +191,15 @@ public class AccumuloKeyIndex {
 		};
 	}
 
-	public <T extends Element> Set<String> getIndexedKeys(Class<T> elementClass) {
+	public <T extends AccumuloElement> Set<String> getIndexedKeys(Class<T> elementClass) {
 		return Collections.unmodifiableSet(
-				elementClass.equals(Vertex.class) ? indexedVertexKeys : indexedEdgeKeys);
+				elementClass.equals(AccumuloVertex.class) ? indexedVertexKeys : indexedEdgeKeys);
 	}
 
-	public <T extends Element> void addPropertyToIndex(T element, String key, Object value) {
+	public <T extends AccumuloElement> void addPropertyToIndex(T element, String key, Object value) {
 		Set<String> indexedKeys;
-		if (element instanceof Vertex) {
+
+		if (element instanceof AccumuloVertex) {
 			indexedKeys = indexedVertexKeys;
 		}
 		else {
@@ -219,10 +217,10 @@ public class AccumuloKeyIndex {
 		Utils.addMutation(indexWriter, m);
 	}
 
-	public <T extends Element> void removePropertyFromIndex(T element, String key, Object value) {
+	public <T extends AccumuloElement> void removePropertyFromIndex(T element, String key, Object value) {
 		Set<String> indexedKeys;
 
-		if (element instanceof Vertex) {
+		if (element instanceof AccumuloVertex) {
 			indexedKeys = indexedVertexKeys;
 		}
 		else {
@@ -240,10 +238,10 @@ public class AccumuloKeyIndex {
 		Utils.addMutation(indexWriter, m);	
 	}
 
-	public <T extends Element> void reindexKey(T element, String key, Object value) {
+	public <T extends AccumuloElement> void reindexKey(T element, String key, Object value) {
 		Set<String> indexedKeys;
 
-		if (element instanceof Vertex) {
+		if (element instanceof AccumuloVertex) {
 			indexedKeys = indexedVertexKeys;
 		}
 		else {
@@ -264,10 +262,10 @@ public class AccumuloKeyIndex {
 		Utils.addMutation(indexWriter, m);
 	}
 
-	public <T extends Element> void addOrRemoveFromIndex(T element, boolean add) {
+	public <T extends AccumuloElement> void addOrRemoveFromIndex(T element, boolean add) {
 		Set<String> indexedKeys;
 
-		if (element instanceof Vertex) {
+		if (element instanceof AccumuloVertex) {
 			indexedKeys = indexedVertexKeys;
 		}
 		else {

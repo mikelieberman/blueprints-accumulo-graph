@@ -7,7 +7,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.UUID;
 
 import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
@@ -31,10 +30,6 @@ public final class Utils {
 
 	private Utils() {
 
-	}
-
-	public static Object makeId() {
-		return UUID.randomUUID().toString();
 	}
 
 	public static <T> byte[] toBytes(T obj) {
@@ -73,12 +68,12 @@ public final class Utils {
 		return fromBytes(value.get());
 	}
 	
-	public static <T> Text elementIdToText(T id) {
-		return new Text(toBytes(id));
+	public static Text elementIdToText(AccumuloElementId id) {
+		return id.toText();
 	}
 	
-	public static <T> T textToElementId(Text text) {
-		return fromBytes(text.getBytes());
+	public static AccumuloElementId textToElementId(Text text) {
+		return new AccumuloElementId(text);
 	}
 
 	public static Value textToValue(Text text) {

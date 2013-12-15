@@ -182,7 +182,8 @@ public class AccumuloGraph implements KeyIndexableGraph {
 			throw new IllegalArgumentException("Id cannot be null");
 		}
 
-		return containsElement(id) ? new AccumuloVertex(this, id) : null;
+		AccumuloElementId eid = new AccumuloElementId(id);
+		return containsElement(eid) ? new AccumuloVertex(this, eid) : null;
 	}
 
 	@Override
@@ -191,7 +192,7 @@ public class AccumuloGraph implements KeyIndexableGraph {
 
 		// Remove from index.
 		if (keyIndex != null) {
-			keyIndex.addOrRemoveFromIndex(vertex, false);
+			keyIndex.addOrRemoveFromIndex(v, false);
 		}
 
 		// Remove all edges that this vertex participates.
@@ -256,8 +257,9 @@ public class AccumuloGraph implements KeyIndexableGraph {
 
 	@Override
 	public Iterable<Vertex> getVertices(String key, Object value) {
-		if (keyIndex != null && keyIndex.getIndexedKeys(Vertex.class).contains(key)) {
-			return keyIndex.getElements(key, value, Vertex.class);
+		if (keyIndex != null && keyIndex.getIndexedKeys(AccumuloVertex.class).contains(key)) {
+			return new SubclassIterable<Vertex>(
+					keyIndex.getElements(key, value, AccumuloVertex.class));
 		}
 		else {
 			return new PropertyFilteredIterable<Vertex>(key, value, getVertices());
@@ -312,7 +314,8 @@ public class AccumuloGraph implements KeyIndexableGraph {
 			throw new IllegalArgumentException("Id cannot be null.");
 		}
 
-		return containsElement(id) ? new AccumuloEdge(this, id) : null;
+		AccumuloElementId eid = new AccumuloElementId(id);
+		return containsElement(eid) ? new AccumuloEdge(this, eid) : null;
 	}
 
 	@Override
@@ -321,7 +324,7 @@ public class AccumuloGraph implements KeyIndexableGraph {
 
 		// Remove from index.
 		if (keyIndex != null) {
-			keyIndex.addOrRemoveFromIndex(edge, false);
+			keyIndex.addOrRemoveFromIndex(e, false);
 		}
 
 		AccumuloVertex out = (AccumuloVertex) e.getVertex(Direction.OUT);
@@ -394,8 +397,9 @@ public class AccumuloGraph implements KeyIndexableGraph {
 	// TODO: Use indexes
 	@Override
 	public Iterable<Edge> getEdges(String key, Object value) {
-		if (keyIndex != null && keyIndex.getIndexedKeys(Edge.class).contains(key)) {
-			return keyIndex.getElements(key, value, Edge.class);
+		if (keyIndex != null && keyIndex.getIndexedKeys(AccumuloEdge.class).contains(key)) {
+			return new SubclassIterable<Edge>(
+					keyIndex.getElements(key, value, AccumuloEdge.class));
 		}
 		else {
 			return new PropertyFilteredIterable<Edge>(key, value, getEdges());
@@ -431,7 +435,7 @@ public class AccumuloGraph implements KeyIndexableGraph {
 		return getClass().getSimpleName().toLowerCase()+":"+opts.getGraphTable();
 	}
 
-	protected boolean containsElement(Object id) {
+	protected boolean containsElement(AccumuloElementId id) {
 		scanner.setRange(new Range(Utils.elementIdToText(id)));
 		return Utils.firstEntry(scanner) != null;
 	}
@@ -440,7 +444,8 @@ public class AccumuloGraph implements KeyIndexableGraph {
 	public <T extends Element> void dropKeyIndex(String key,
 			Class<T> elementClass) {
 		if (keyIndex != null) {
-			keyIndex.dropKeyIndex(key, elementClass);
+			keyIndex.dropKeyIndex(key,
+					elementClass.equals(Vertex.class) ? AccumuloVertex.class : AccumuloEdge.class);
 		}
 	}
 
@@ -448,13 +453,20 @@ public class AccumuloGraph implements KeyIndexableGraph {
 	public <T extends Element> void createKeyIndex(String key,
 			Class<T> elementClass, @SuppressWarnings("rawtypes") Parameter... indexParameters) {
 		if (keyIndex != null) {
-			keyIndex.createKeyIndex(key, elementClass);
+			keyIndex.createKeyIndex(key,
+					elementClass.equals(Vertex.class) ? AccumuloVertex.class : AccumuloEdge.class);
 		}
 	}
 
 	@Override
 	public <T extends Element> Set<String> getIndexedKeys(Class<T> elementClass) {
-		return keyIndex != null ? keyIndex.getIndexedKeys(elementClass) : null;
+		if (keyIndex != null) {
+			return keyIndex.getIndexedKeys(
+					elementClass.equals(Vertex.class) ? AccumuloVertex.class : AccumuloEdge.class);
+		}
+		else {
+			return null;
+		}
 	}
 
 }
