@@ -9,6 +9,8 @@ import org.apache.accumulo.core.data.Range;
 import org.apache.accumulo.core.data.Value;
 import org.apache.hadoop.io.Text;
 
+import accumulograph.Const.ElementType;
+
 import com.tinkerpop.blueprints.Element;
 
 /**
@@ -20,11 +22,13 @@ public abstract class AccumuloElement implements Element {
 
 	protected AccumuloGraph parent;
 	protected AccumuloElementId id;
+	protected ElementType type;
 	protected Text idRow;
 
-	protected AccumuloElement(AccumuloGraph parent, Object id) {
+	protected AccumuloElement(AccumuloGraph parent, ElementType type, Object id) {
 		this.parent = parent;
 		this.id = new AccumuloElementId(id);
+		this.type = type;
 		this.idRow = Utils.elementIdToText(this.id);
 	}
 
@@ -106,6 +110,10 @@ public abstract class AccumuloElement implements Element {
 	@Override
 	public AccumuloElementId getId() {
 		return id;
+	}
+
+	public ElementType getType() {
+		return type;
 	}
 
 	protected Text getIdRow() {

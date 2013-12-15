@@ -67,11 +67,11 @@ public final class Utils {
 	public static <T> T valueToObject(Value value) {
 		return fromBytes(value.get());
 	}
-	
+
 	public static Text elementIdToText(AccumuloElementId id) {
 		return id.toText();
 	}
-	
+
 	public static AccumuloElementId textToElementId(Text text) {
 		return new AccumuloElementId(text);
 	}

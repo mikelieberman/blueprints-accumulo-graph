@@ -30,6 +30,8 @@ public final class Const {
 	public static final String USE_PROPERTY_CACHE =
 			"usePropertyCache";
 
+	public static enum ElementType {VERTEX, EDGE};
+
 	// Vertex-related.
 	public static final Text VERTEX_TYPE = new Text("MVERTEX");
 	public static final Text VERTEX_OUT_EDGE = new Text("EOUT");

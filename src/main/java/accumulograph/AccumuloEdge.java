@@ -7,6 +7,8 @@ import org.apache.accumulo.core.data.Range;
 import org.apache.accumulo.core.data.Value;
 import org.apache.hadoop.io.Text;
 
+import accumulograph.Const.ElementType;
+
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Vertex;
@@ -20,22 +22,22 @@ public class AccumuloEdge extends AccumuloElement implements Edge {
 	protected AccumuloVertex out;
 	protected AccumuloVertex in;
 	protected String label;
-	
+
 	public AccumuloEdge(AccumuloGraph parent, Object id) {
-		super(parent, id);
-		
+		super(parent, ElementType.EDGE, id);
+
 		Text cf = new Text();
 		Text cq = new Text();
-		
+
 		parent.scanner.setRange(new Range(idRow));
 		parent.scanner.fetchColumnFamily(Const.EDGE_TYPE);
 		parent.scanner.fetchColumnFamily(Const.EDGE_OUT_VERTEX);
 		parent.scanner.fetchColumnFamily(Const.EDGE_IN_VERTEX);
-		
+
 		for (Map.Entry<Key, Value> entry : parent.scanner) {
 			entry.getKey().getColumnFamily(cf);
 			entry.getKey().getColumnQualifier(cq);
-			
+
 			if (cf.equals(Const.EDGE_TYPE)) {
 				label = cq.toString();
 			}
@@ -52,25 +54,25 @@ public class AccumuloEdge extends AccumuloElement implements Edge {
 
 		parent.scanner.clearColumns();
 	}
-	
+
 	public AccumuloEdge(AccumuloGraph parent, Object id,
 			AccumuloVertex out, AccumuloVertex in,
 			String label) {
-		super(parent, id);
+		super(parent, ElementType.EDGE, id);
 		this.out = out;
 		this.in = in;
 		this.label = label;
 	}
-	
+
 	@Override
 	public void setProperty(String key, Object value) {
 		if ("label".equals(key)) {
 			throw new IllegalArgumentException("Edge property cannot be label.");
 		}
-		
+
 		super.setProperty(key, value);
 	}
-	
+
 	@Override
 	public Vertex getVertex(Direction direction)
 			throws IllegalArgumentException {
@@ -127,7 +129,7 @@ public class AccumuloEdge extends AccumuloElement implements Edge {
 			return false;
 		return true;
 	}
-	
+
 	@Override
 	public String toString() {
 		StringBuffer buffer = new StringBuffer();
@@ -142,5 +144,5 @@ public class AccumuloEdge extends AccumuloElement implements Edge {
 		buffer.append("]");
 		return buffer.toString();
 	}
-	
+
 }
