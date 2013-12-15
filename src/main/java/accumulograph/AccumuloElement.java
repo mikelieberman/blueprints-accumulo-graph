@@ -35,7 +35,7 @@ public abstract class AccumuloElement implements Element {
 	@Override
 	public <T> T getProperty(String key) {
 		parent.scanner.setRange(new Range(idRow));
-		parent.scanner.fetchColumn(Const.PROPERTY_TYPE, Utils.stringToText(key));
+		parent.scanner.fetchColumn(Const.PROPERTY_SIGNAL, Utils.stringToText(key));
 		Map.Entry<Key, Value> entry = Utils.firstEntry(parent.scanner);
 		parent.scanner.clearColumns();
 		return entry != null ? Utils.<T>valueToObject(entry.getValue()) : null;
@@ -46,7 +46,7 @@ public abstract class AccumuloElement implements Element {
 		Set<String> keys = new HashSet<String>();
 
 		parent.scanner.setRange(new Range(idRow));
-		parent.scanner.fetchColumnFamily(Const.PROPERTY_TYPE);
+		parent.scanner.fetchColumnFamily(Const.PROPERTY_SIGNAL);
 
 		for (Map.Entry<Key, Value> entry : parent.scanner) {
 			keys.add(Utils.textToString(entry.getKey().getColumnQualifier()));
@@ -78,7 +78,7 @@ public abstract class AccumuloElement implements Element {
 		}
 
 		Mutation m = new Mutation(idRow);
-		m.put(Const.PROPERTY_TYPE, Utils.stringToText(key),
+		m.put(Const.PROPERTY_SIGNAL, Utils.stringToText(key),
 				Utils.objectToValue(value));
 		Utils.addMutation(parent.writer, m);
 
@@ -101,7 +101,7 @@ public abstract class AccumuloElement implements Element {
 		}
 
 		Mutation m = new Mutation(idRow);
-		m.putDelete(Const.PROPERTY_TYPE, Utils.stringToText(key));
+		m.putDelete(Const.PROPERTY_SIGNAL, Utils.stringToText(key));
 		Utils.addMutation(parent.writer, m);
 
 		return old;

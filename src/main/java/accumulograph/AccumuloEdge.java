@@ -30,7 +30,7 @@ public class AccumuloEdge extends AccumuloElement implements Edge {
 		Text cq = new Text();
 
 		parent.scanner.setRange(new Range(idRow));
-		parent.scanner.fetchColumnFamily(Const.EDGE_TYPE);
+		parent.scanner.fetchColumnFamily(Const.EDGE_SIGNAL);
 		parent.scanner.fetchColumnFamily(Const.EDGE_OUT_VERTEX);
 		parent.scanner.fetchColumnFamily(Const.EDGE_IN_VERTEX);
 
@@ -38,7 +38,7 @@ public class AccumuloEdge extends AccumuloElement implements Edge {
 			entry.getKey().getColumnFamily(cf);
 			entry.getKey().getColumnQualifier(cq);
 
-			if (cf.equals(Const.EDGE_TYPE)) {
+			if (cf.equals(Const.EDGE_SIGNAL)) {
 				label = cq.toString();
 			}
 			else if (cf.equals(Const.EDGE_OUT_VERTEX)) {

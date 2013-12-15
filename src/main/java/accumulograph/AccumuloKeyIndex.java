@@ -94,7 +94,7 @@ public class AccumuloKeyIndex {
 
 		// Add to indexed key list.
 		Mutation m = new Mutation(propertyList);
-		m.put(Utils.stringToText(key), Const.EMPTY, Const.EMPTY_VALUE);
+		m.put(Utils.stringToText(key), Const.EMPTY_TEXT, Const.EMPTY_VALUE);
 		Utils.addMutation(indexWriter, m, 50L);
 		// Flush explicitly because this is important.
 		Utils.flush(indexWriter);
@@ -131,7 +131,7 @@ public class AccumuloKeyIndex {
 
 		// Remove index from list.
 		Mutation m = new Mutation(propertyList);
-		m.putDelete(Utils.stringToText(key), Const.EMPTY);
+		m.putDelete(Utils.stringToText(key), Const.EMPTY_TEXT);
 		Utils.addMutation(indexWriter, m, 50L);
 		// Flush explicitly because this is important.
 		Utils.flush(indexWriter);

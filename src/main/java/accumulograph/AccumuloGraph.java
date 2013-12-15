@@ -164,12 +164,12 @@ public class AccumuloGraph implements KeyIndexableGraph {
 
 		// Add vertex.
 		Mutation m = new Mutation(vertex.getIdRow());
-		m.put(Const.VERTEX_TYPE, Const.EMPTY, Const.EMPTY_VALUE);
+		m.put(Const.VERTEX_SIGNAL, Const.EMPTY_TEXT, Const.EMPTY_VALUE);
 		Utils.addMutation(writer, m);
 
 		// Add to vertex list.
-		m = new Mutation(Const.VERTEX_TYPE);
-		m.put(vertex.getIdRow(), Const.EMPTY, Const.EMPTY_VALUE);
+		m = new Mutation(Const.VERTEX_SIGNAL);
+		m.put(vertex.getIdRow(), Const.EMPTY_TEXT, Const.EMPTY_VALUE);
 		Utils.addMutation(writer, m);
 
 		if (keyIndex != null) {
@@ -204,13 +204,13 @@ public class AccumuloGraph implements KeyIndexableGraph {
 		}
 
 		// Remove from vertex list.
-		Mutation m = new Mutation(Const.VERTEX_TYPE);
-		m.putDelete(v.getIdRow(), Const.EMPTY);
+		Mutation m = new Mutation(Const.VERTEX_SIGNAL);
+		m.putDelete(v.getIdRow(), Const.EMPTY_TEXT);
 		Utils.addMutation(writer, m);
 
 		// Everything else related to vertex.
 		m = new Mutation(v.getIdRow());
-		m.putDelete(Const.EMPTY, Const.EMPTY);
+		m.putDelete(Const.EMPTY_TEXT, Const.EMPTY_TEXT);
 		Utils.addMutation(writer, m);
 	}
 
@@ -240,9 +240,9 @@ public class AccumuloGraph implements KeyIndexableGraph {
 			public Iterator<Vertex> iterator() {
 				Key minKey;
 				if (minId == null) {
-					minKey = new Key(Const.VERTEX_TYPE);
+					minKey = new Key(Const.VERTEX_SIGNAL);
 				} else {
-					minKey = new Key(Const.VERTEX_TYPE,
+					minKey = new Key(Const.VERTEX_SIGNAL,
 							AccumuloIdManager.toText(
 									new AccumuloElementId(minId), ElementType.VERTEX));
 				}
@@ -251,7 +251,7 @@ public class AccumuloGraph implements KeyIndexableGraph {
 				if (maxId == null) {
 					maxKey = minKey.followingKey(PartialKey.ROW);
 				} else {
-					maxKey = new Key(Const.VERTEX_TYPE,
+					maxKey = new Key(Const.VERTEX_SIGNAL,
 							AccumuloIdManager.toText(
 									new AccumuloElementId(maxId), ElementType.VERTEX));
 				}
@@ -314,14 +314,14 @@ public class AccumuloGraph implements KeyIndexableGraph {
 
 		// Add the edge and its information.
 		Mutation m = new Mutation(edge.getIdRow());
-		m.put(Const.EDGE_TYPE, Utils.stringToText(label), Const.EMPTY_VALUE);
+		m.put(Const.EDGE_SIGNAL, Utils.stringToText(label), Const.EMPTY_VALUE);
 		m.put(Const.EDGE_OUT_VERTEX, AccumuloIdManager.toText(out), Const.EMPTY_VALUE);
 		m.put(Const.EDGE_IN_VERTEX, AccumuloIdManager.toText(in), Const.EMPTY_VALUE);
 		Utils.addMutation(writer, m);
 
 		// Add to edge list.
-		m = new Mutation(Const.EDGE_TYPE);
-		m.put(edge.getIdRow(), Const.EMPTY, Const.EMPTY_VALUE);
+		m = new Mutation(Const.EDGE_SIGNAL);
+		m.put(edge.getIdRow(), Const.EMPTY_TEXT, Const.EMPTY_VALUE);
 		Utils.addMutation(writer, m);
 
 		// Update out vertex.
@@ -375,13 +375,13 @@ public class AccumuloGraph implements KeyIndexableGraph {
 		Utils.addMutation(writer, m);
 
 		// Remove from edge list.
-		m = new Mutation(Const.EDGE_TYPE);
-		m.putDelete(e.getIdRow(), Const.EMPTY);
+		m = new Mutation(Const.EDGE_SIGNAL);
+		m.putDelete(e.getIdRow(), Const.EMPTY_TEXT);
 		Utils.addMutation(writer, m);
 
 		// Remove everything else.
 		m = new Mutation(e.getIdRow());
-		m.putDelete(Const.EMPTY, Const.EMPTY);
+		m.putDelete(Const.EMPTY_TEXT, Const.EMPTY_TEXT);
 	}
 
 	@Override
@@ -404,9 +404,9 @@ public class AccumuloGraph implements KeyIndexableGraph {
 			public Iterator<Edge> iterator() {
 				Key minKey;
 				if (minId == null) {
-					minKey = new Key(Const.EDGE_TYPE);
+					minKey = new Key(Const.EDGE_SIGNAL);
 				} else {
-					minKey = new Key(Const.EDGE_TYPE,
+					minKey = new Key(Const.EDGE_SIGNAL,
 							AccumuloIdManager.toText(new AccumuloElementId(minId), ElementType.EDGE));
 				}
 
@@ -414,7 +414,7 @@ public class AccumuloGraph implements KeyIndexableGraph {
 				if (maxId == null) {
 					maxKey = minKey.followingKey(PartialKey.ROW);
 				} else {
-					maxKey = new Key(Const.EDGE_TYPE,
+					maxKey = new Key(Const.EDGE_SIGNAL,
 							AccumuloIdManager.toText(new AccumuloElementId(maxId), ElementType.EDGE));
 				}
 
