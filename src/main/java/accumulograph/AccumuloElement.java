@@ -22,14 +22,14 @@ public abstract class AccumuloElement implements Element {
 
 	protected AccumuloGraph parent;
 	protected AccumuloElementId id;
-	protected ElementType type;
 	protected Text idRow;
+	protected ElementType type;
 
 	protected AccumuloElement(AccumuloGraph parent, ElementType type, Object id) {
 		this.parent = parent;
 		this.id = new AccumuloElementId(id);
 		this.type = type;
-		this.idRow = Utils.elementIdToText(this.id);
+		this.idRow = AccumuloIdManager.toText(this);
 	}
 
 	@Override

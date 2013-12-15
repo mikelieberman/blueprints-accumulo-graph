@@ -2,8 +2,6 @@ package accumulograph;
 
 import java.util.UUID;
 
-import org.apache.hadoop.io.Text;
-
 /**
  * Represents an element (v/e) id in the graph.
  * Essentially a thin wrapper around a string.
@@ -23,10 +21,6 @@ public class AccumuloElementId {
 		}
 
 		this.id = id.toString();
-	}
-
-	public Text toText() {
-		return new Text(id);
 	}
 
 	@Override

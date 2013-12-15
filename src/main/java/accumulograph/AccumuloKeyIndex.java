@@ -175,10 +175,10 @@ public class AccumuloKeyIndex {
 						entry.getKey().getColumnQualifier(eltIdCq);
 
 						if (eltClass.equals(AccumuloVertex.class)) {
-							return (T) new AccumuloVertex(parent, Utils.textToElementId(eltIdCq));
+							return (T) new AccumuloVertex(parent, AccumuloIdManager.fromText(eltIdCq));
 						}
 						else {
-							return (T) new AccumuloEdge(parent, Utils.textToElementId(eltIdCq));
+							return (T) new AccumuloEdge(parent, AccumuloIdManager.fromText(eltIdCq));
 						}
 					}
 
@@ -212,8 +212,7 @@ public class AccumuloKeyIndex {
 		}
 
 		Mutation m = new Mutation(Utils.stringToText(key));
-		m.put(Utils.objectToText(value),
-				Utils.elementIdToText(element.getId()), Const.EMPTY_VALUE);
+		m.put(Utils.objectToText(value), AccumuloIdManager.toText(element), Const.EMPTY_VALUE);
 		Utils.addMutation(indexWriter, m);
 	}
 
@@ -233,9 +232,8 @@ public class AccumuloKeyIndex {
 		}
 
 		Mutation m = new Mutation(Utils.stringToText(key));
-		m.putDelete(Utils.objectToText(value),
-				Utils.elementIdToText(element.getId()));
-		Utils.addMutation(indexWriter, m);	
+		m.putDelete(Utils.objectToText(value), AccumuloIdManager.toText(element));
+		Utils.addMutation(indexWriter, m);
 	}
 
 	public <T extends AccumuloElement> void reindexKey(T element, String key, Object value) {
@@ -251,12 +249,10 @@ public class AccumuloKeyIndex {
 		Mutation m = new Mutation(Utils.stringToText(key));
 
 		if (indexedKeys.contains(key)) {
-			m.put(Utils.objectToText(value),
-					Utils.elementIdToText(element.getId()), Const.EMPTY_VALUE);
+			m.put(Utils.objectToText(value), AccumuloIdManager.toText(element), Const.EMPTY_VALUE);
 		}
 		else {
-			m.putDelete(Utils.objectToText(value),
-					Utils.elementIdToText(element.getId()));
+			m.putDelete(Utils.objectToText(value), AccumuloIdManager.toText(element));
 		}
 
 		Utils.addMutation(indexWriter, m);
@@ -272,7 +268,7 @@ public class AccumuloKeyIndex {
 			indexedKeys = indexedEdgeKeys;
 		}
 
-		Text eltIdCq = Utils.elementIdToText(element.getId());
+		Text eltIdCq = AccumuloIdManager.toText(element);
 
 		for (String key : indexedKeys) {
 			Object value = element.getProperty(key);

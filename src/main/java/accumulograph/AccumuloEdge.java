@@ -42,10 +42,10 @@ public class AccumuloEdge extends AccumuloElement implements Edge {
 				label = cq.toString();
 			}
 			else if (cf.equals(Const.EDGE_OUT_VERTEX)) {
-				out = new AccumuloVertex(parent, Utils.textToElementId(cq));
+				out = new AccumuloVertex(parent, AccumuloIdManager.fromText(cq));
 			}
 			else if (cf.equals(Const.EDGE_IN_VERTEX)) {
-				in = new AccumuloVertex(parent, Utils.textToElementId(cq));
+				in = new AccumuloVertex(parent, AccumuloIdManager.fromText(cq));
 			}
 			else {
 				throw new RuntimeException("Unexpected CF: "+cf);

@@ -101,7 +101,7 @@ public class AccumuloVertex extends AccumuloElement implements Vertex {
 						next.getKey().getColumnQualifier(cq);
 						next = null;
 
-						current = new AccumuloEdge(parent, Utils.textToElementId(cq));
+						current = new AccumuloEdge(parent, AccumuloIdManager.fromText(cq));
 						return current;
 					}
 
@@ -229,7 +229,7 @@ public class AccumuloVertex extends AccumuloElement implements Vertex {
 					public Vertex next() {
 						loadMore();
 						current = new AccumuloVertex(parent,
-								Utils.textToElementId(rowIds.remove()));
+								AccumuloIdManager.fromText(rowIds.remove()));
 						return current;
 					}
 

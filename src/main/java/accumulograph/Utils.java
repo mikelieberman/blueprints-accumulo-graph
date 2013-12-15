@@ -68,14 +68,6 @@ public final class Utils {
 		return fromBytes(value.get());
 	}
 
-	public static Text elementIdToText(AccumuloElementId id) {
-		return id.toText();
-	}
-
-	public static AccumuloElementId textToElementId(Text text) {
-		return new AccumuloElementId(text);
-	}
-
 	public static Value textToValue(Text text) {
 		return new Value(text.getBytes());
 	}

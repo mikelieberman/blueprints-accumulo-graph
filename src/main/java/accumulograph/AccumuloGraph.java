@@ -22,6 +22,8 @@ import org.apache.accumulo.core.data.Value;
 import org.apache.commons.configuration.Configuration;
 import org.apache.hadoop.io.Text;
 
+import accumulograph.Const.ElementType;
+
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Element;
@@ -184,7 +186,7 @@ public class AccumuloGraph implements KeyIndexableGraph {
 		}
 
 		AccumuloElementId eid = new AccumuloElementId(id);
-		return containsElement(eid) ? new AccumuloVertex(this, eid) : null;
+		return containsElement(eid, ElementType.VERTEX) ? new AccumuloVertex(this, eid) : null;
 	}
 
 	@Override
@@ -241,7 +243,8 @@ public class AccumuloGraph implements KeyIndexableGraph {
 					minKey = new Key(Const.VERTEX_TYPE);
 				} else {
 					minKey = new Key(Const.VERTEX_TYPE,
-							new AccumuloElementId(minId).toText());
+							AccumuloIdManager.toText(
+									new AccumuloElementId(minId), ElementType.VERTEX));
 				}
 
 				Key maxKey;
@@ -249,7 +252,8 @@ public class AccumuloGraph implements KeyIndexableGraph {
 					maxKey = minKey.followingKey(PartialKey.ROW);
 				} else {
 					maxKey = new Key(Const.VERTEX_TYPE,
-							new AccumuloElementId(maxId).toText());
+							AccumuloIdManager.toText(
+									new AccumuloElementId(maxId), ElementType.VERTEX));
 				}
 
 				scanner.setRange(new Range(minKey, maxKey));
@@ -278,7 +282,7 @@ public class AccumuloGraph implements KeyIndexableGraph {
 					}
 
 					private AccumuloVertex makeVertex(Text id) {
-						return new AccumuloVertex(parent, Utils.textToElementId(id));						
+						return new AccumuloVertex(parent, AccumuloIdManager.fromText(id));						
 					}
 
 				};
@@ -311,8 +315,8 @@ public class AccumuloGraph implements KeyIndexableGraph {
 		// Add the edge and its information.
 		Mutation m = new Mutation(edge.getIdRow());
 		m.put(Const.EDGE_TYPE, Utils.stringToText(label), Const.EMPTY_VALUE);
-		m.put(Const.EDGE_OUT_VERTEX, Utils.elementIdToText(out.getId()), Const.EMPTY_VALUE);
-		m.put(Const.EDGE_IN_VERTEX, Utils.elementIdToText(in.getId()), Const.EMPTY_VALUE);
+		m.put(Const.EDGE_OUT_VERTEX, AccumuloIdManager.toText(out), Const.EMPTY_VALUE);
+		m.put(Const.EDGE_IN_VERTEX, AccumuloIdManager.toText(in), Const.EMPTY_VALUE);
 		Utils.addMutation(writer, m);
 
 		// Add to edge list.
@@ -346,7 +350,7 @@ public class AccumuloGraph implements KeyIndexableGraph {
 		}
 
 		AccumuloElementId eid = new AccumuloElementId(id);
-		return containsElement(eid) ? new AccumuloEdge(this, eid) : null;
+		return containsElement(eid, ElementType.EDGE) ? new AccumuloEdge(this, eid) : null;
 	}
 
 	@Override
@@ -403,7 +407,7 @@ public class AccumuloGraph implements KeyIndexableGraph {
 					minKey = new Key(Const.EDGE_TYPE);
 				} else {
 					minKey = new Key(Const.EDGE_TYPE,
-							new AccumuloElementId(minId).toText());
+							AccumuloIdManager.toText(new AccumuloElementId(minId), ElementType.EDGE));
 				}
 
 				Key maxKey;
@@ -411,7 +415,7 @@ public class AccumuloGraph implements KeyIndexableGraph {
 					maxKey = minKey.followingKey(PartialKey.ROW);
 				} else {
 					maxKey = new Key(Const.EDGE_TYPE,
-							new AccumuloElementId(maxId).toText());
+							AccumuloIdManager.toText(new AccumuloElementId(maxId), ElementType.EDGE));
 				}
 
 				scanner.setRange(new Range(minKey, maxKey));
@@ -440,7 +444,7 @@ public class AccumuloGraph implements KeyIndexableGraph {
 					}
 
 					private AccumuloEdge makeEdge(Text id) {
-						return new AccumuloEdge(parent, Utils.textToElementId(id));
+						return new AccumuloEdge(parent, AccumuloIdManager.fromText(id));
 					}
 
 				};
@@ -490,8 +494,8 @@ public class AccumuloGraph implements KeyIndexableGraph {
 		return getClass().getSimpleName().toLowerCase()+":"+opts.getGraphTable();
 	}
 
-	protected boolean containsElement(AccumuloElementId id) {
-		scanner.setRange(new Range(Utils.elementIdToText(id)));
+	protected boolean containsElement(AccumuloElementId id, ElementType type) {
+		scanner.setRange(new Range(AccumuloIdManager.toText(id, type)));
 		return Utils.firstEntry(scanner) != null;
 	}
 
