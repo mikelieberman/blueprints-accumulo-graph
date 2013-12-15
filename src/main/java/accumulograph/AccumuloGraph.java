@@ -16,6 +16,7 @@ import org.apache.accumulo.core.client.TableExistsException;
 import org.apache.accumulo.core.client.TableNotFoundException;
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Mutation;
+import org.apache.accumulo.core.data.PartialKey;
 import org.apache.accumulo.core.data.Range;
 import org.apache.accumulo.core.data.Value;
 import org.apache.commons.configuration.Configuration;
@@ -213,6 +214,20 @@ public class AccumuloGraph implements KeyIndexableGraph {
 
 	@Override
 	public Iterable<Vertex> getVertices() {
+		return getVerticesInRange(null, null);
+	}
+
+	/**
+	 * Retrieve vertices with ids in a given range. Null means infinite.
+	 * @param minId Minimum id
+	 * @param maxId Maximum id
+	 * @return
+	 */
+	public Iterable<Vertex> getVerticesInRange(final Object minId, final Object maxId) {
+		if ((minId == null) != (maxId == null)) {
+			throw new IllegalArgumentException("Specify both min and max, or null for both");
+		}
+
 		final AccumuloGraph parent = this;
 
 		return new Iterable<Vertex>() {
@@ -221,7 +236,23 @@ public class AccumuloGraph implements KeyIndexableGraph {
 
 			@Override
 			public Iterator<Vertex> iterator() {
-				scanner.setRange(new Range(Const.VERTEX_TYPE));
+				Key minKey;
+				if (minId == null) {
+					minKey = new Key(Const.VERTEX_TYPE);
+				} else {
+					minKey = new Key(Const.VERTEX_TYPE,
+							new AccumuloElementId(minId).toText());
+				}
+
+				Key maxKey;
+				if (maxId == null) {
+					maxKey = minKey.followingKey(PartialKey.ROW);
+				} else {
+					maxKey = new Key(Const.VERTEX_TYPE,
+							new AccumuloElementId(maxId).toText());
+				}
+
+				scanner.setRange(new Range(minKey, maxKey));
 				iterator = scanner.iterator();
 
 				return new Iterator<Vertex>() {
@@ -351,6 +382,14 @@ public class AccumuloGraph implements KeyIndexableGraph {
 
 	@Override
 	public Iterable<Edge> getEdges() {
+		return getEdgesInRange(null, null);
+	}
+
+	public Iterable<Edge> getEdgesInRange(final Object minId, final Object maxId) {
+		if ((minId == null) != (maxId == null)) {
+			throw new IllegalArgumentException("Specify both min and max, or null for both");
+		}
+
 		final AccumuloGraph parent = this;
 
 		return new Iterable<Edge>() {
@@ -359,7 +398,23 @@ public class AccumuloGraph implements KeyIndexableGraph {
 
 			@Override
 			public Iterator<Edge> iterator() {
-				scanner.setRange(new Range(Const.EDGE_TYPE));
+				Key minKey;
+				if (minId == null) {
+					minKey = new Key(Const.EDGE_TYPE);
+				} else {
+					minKey = new Key(Const.EDGE_TYPE,
+							new AccumuloElementId(minId).toText());
+				}
+
+				Key maxKey;
+				if (maxId == null) {
+					maxKey = minKey.followingKey(PartialKey.ROW);
+				} else {
+					maxKey = new Key(Const.EDGE_TYPE,
+							new AccumuloElementId(maxId).toText());
+				}
+
+				scanner.setRange(new Range(minKey, maxKey));
 				iterator = scanner.iterator();
 
 				return new Iterator<Edge>() {
