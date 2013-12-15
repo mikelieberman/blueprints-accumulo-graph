@@ -21,8 +21,6 @@ import org.apache.accumulo.core.data.Range;
 import org.apache.accumulo.core.data.Value;
 import org.apache.hadoop.io.Text;
 
-import accumulograph.Const.Type;
-
 import com.tinkerpop.blueprints.Element;
 import com.tinkerpop.blueprints.Vertex;
 
@@ -146,16 +144,7 @@ public class AccumuloKeyIndex {
 	@SuppressWarnings("unchecked")
 	public <T extends Element> Iterable<T> getElements(String key, Object value,
 			Class<T> elementClass) {
-		Type propertyType;
-
-		if (elementClass.equals(Vertex.class)) {
-			propertyType = Type.VERTEX_PROPERTY;
-		}
-		else {
-			propertyType = Type.EDGE_PROPERTY;
-		}
-
-		indexScanner.setRange(new Range(Utils.typedObjectToText(propertyType, key)));
+		indexScanner.setRange(new Range(Utils.stringToText(key)));
 		indexScanner.clearColumns();
 
 		// If specified, restrict to a specific value.
@@ -189,10 +178,10 @@ public class AccumuloKeyIndex {
 						entry.getKey().getColumnQualifier(eltIdCq);
 
 						if (eltClass.equals(Vertex.class)) {
-							return (T) new AccumuloVertex(parent, Utils.textToTypedObject(eltIdCq));
+							return (T) new AccumuloVertex(parent, Utils.textToElementId(eltIdCq));
 						}
 						else {
-							return (T) new AccumuloEdge(parent, Utils.textToTypedObject(eltIdCq));
+							return (T) new AccumuloEdge(parent, Utils.textToElementId(eltIdCq));
 						}
 					}
 
@@ -212,18 +201,11 @@ public class AccumuloKeyIndex {
 
 	public <T extends Element> void addPropertyToIndex(T element, String key, Object value) {
 		Set<String> indexedKeys;
-		Type propertyType;
-		Type elementIdType;
-
 		if (element instanceof Vertex) {
 			indexedKeys = indexedVertexKeys;
-			propertyType = Type.VERTEX_PROPERTY;
-			elementIdType = Type.VERTEX_ID;
 		}
 		else {
 			indexedKeys = indexedEdgeKeys;
-			propertyType = Type.EDGE_PROPERTY;
-			elementIdType = Type.VERTEX_ID;
 		}
 
 		// Don't add things that are not indexed.
@@ -231,26 +213,20 @@ public class AccumuloKeyIndex {
 			return;
 		}
 
-		Mutation m = new Mutation(Utils.typedObjectToText(propertyType, key));
+		Mutation m = new Mutation(Utils.stringToText(key));
 		m.put(Utils.objectToText(value),
-				Utils.typedObjectToText(elementIdType, element.getId()), Const.EMPTY_VALUE);
+				Utils.elementIdToText(element.getId()), Const.EMPTY_VALUE);
 		Utils.addMutation(indexWriter, m);
 	}
 
 	public <T extends Element> void removePropertyFromIndex(T element, String key, Object value) {
 		Set<String> indexedKeys;
-		Type propertyType;
-		Type elementIdType;
 
 		if (element instanceof Vertex) {
 			indexedKeys = indexedVertexKeys;
-			propertyType = Type.VERTEX_PROPERTY;
-			elementIdType = Type.VERTEX_ID;
 		}
 		else {
 			indexedKeys = indexedEdgeKeys;
-			propertyType = Type.EDGE_PROPERTY;
-			elementIdType = Type.VERTEX_ID;
 		}
 
 		// Don't remove things that are not indexed.
@@ -258,37 +234,31 @@ public class AccumuloKeyIndex {
 			return;
 		}
 
-		Mutation m = new Mutation(Utils.typedObjectToText(propertyType, key));
+		Mutation m = new Mutation(Utils.stringToText(key));
 		m.putDelete(Utils.objectToText(value),
-				Utils.typedObjectToText(elementIdType, element.getId()));
+				Utils.elementIdToText(element.getId()));
 		Utils.addMutation(indexWriter, m);	
 	}
 
 	public <T extends Element> void reindexKey(T element, String key, Object value) {
 		Set<String> indexedKeys;
-		Type propertyType;
-		Type elementIdType;
 
 		if (element instanceof Vertex) {
 			indexedKeys = indexedVertexKeys;
-			propertyType = Type.VERTEX_PROPERTY;
-			elementIdType = Type.VERTEX_ID;
 		}
 		else {
 			indexedKeys = indexedEdgeKeys;
-			propertyType = Type.EDGE_PROPERTY;
-			elementIdType = Type.VERTEX_ID;
 		}
 
-		Mutation m = new Mutation(Utils.typedObjectToText(propertyType, key));
+		Mutation m = new Mutation(Utils.stringToText(key));
 
 		if (indexedKeys.contains(key)) {
 			m.put(Utils.objectToText(value),
-					Utils.typedObjectToText(elementIdType, element.getId()), Const.EMPTY_VALUE);
+					Utils.elementIdToText(element.getId()), Const.EMPTY_VALUE);
 		}
 		else {
 			m.putDelete(Utils.objectToText(value),
-					Utils.typedObjectToText(elementIdType, element.getId()));
+					Utils.elementIdToText(element.getId()));
 		}
 
 		Utils.addMutation(indexWriter, m);
@@ -296,27 +266,21 @@ public class AccumuloKeyIndex {
 
 	public <T extends Element> void addOrRemoveFromIndex(T element, boolean add) {
 		Set<String> indexedKeys;
-		Type propertyType;
-		Type elementIdType;
 
 		if (element instanceof Vertex) {
 			indexedKeys = indexedVertexKeys;
-			propertyType = Type.VERTEX_PROPERTY;
-			elementIdType = Type.VERTEX_ID;
 		}
 		else {
 			indexedKeys = indexedEdgeKeys;
-			propertyType = Type.EDGE_PROPERTY;
-			elementIdType = Type.EDGE_ID;
 		}
 
-		Text eltIdCq = Utils.typedObjectToText(elementIdType, element.getId());
+		Text eltIdCq = Utils.elementIdToText(element.getId());
 
 		for (String key : indexedKeys) {
 			Object value = element.getProperty(key);
 
 			if (value != null) {
-				Mutation m = new Mutation(Utils.typedObjectToText(propertyType, key));
+				Mutation m = new Mutation(Utils.stringToText(key));
 
 				if (add) {
 					m.put(Utils.objectToText(value), eltIdCq, Const.EMPTY_VALUE);

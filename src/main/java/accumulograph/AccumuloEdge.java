@@ -7,8 +7,6 @@ import org.apache.accumulo.core.data.Range;
 import org.apache.accumulo.core.data.Value;
 import org.apache.hadoop.io.Text;
 
-import accumulograph.Const.Type;
-
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Vertex;
@@ -24,7 +22,7 @@ public class AccumuloEdge extends AccumuloElement implements Edge {
 	protected String label;
 	
 	public AccumuloEdge(AccumuloGraph parent, Object id) {
-		super(parent, id, Type.EDGE_ID);
+		super(parent, id);
 		
 		Text cf = new Text();
 		Text cq = new Text();
@@ -42,10 +40,10 @@ public class AccumuloEdge extends AccumuloElement implements Edge {
 				label = cq.toString();
 			}
 			else if (cf.equals(Const.EDGE_OUT_VERTEX)) {
-				out = new AccumuloVertex(parent, Utils.textToTypedObject(cq));
+				out = new AccumuloVertex(parent, Utils.textToElementId(cq));
 			}
 			else if (cf.equals(Const.EDGE_IN_VERTEX)) {
-				in = new AccumuloVertex(parent, Utils.textToTypedObject(cq));
+				in = new AccumuloVertex(parent, Utils.textToElementId(cq));
 			}
 			else {
 				throw new RuntimeException("Unexpected CF: "+cf);
@@ -58,7 +56,7 @@ public class AccumuloEdge extends AccumuloElement implements Edge {
 	public AccumuloEdge(AccumuloGraph parent, Object id,
 			AccumuloVertex out, AccumuloVertex in,
 			String label) {
-		super(parent, id, Type.EDGE_ID);
+		super(parent, id);
 		this.out = out;
 		this.in = in;
 		this.label = label;

@@ -9,8 +9,6 @@ import org.apache.accumulo.core.data.Range;
 import org.apache.accumulo.core.data.Value;
 import org.apache.hadoop.io.Text;
 
-import accumulograph.Const.Type;
-
 import com.tinkerpop.blueprints.Element;
 
 /**
@@ -21,21 +19,18 @@ import com.tinkerpop.blueprints.Element;
 public abstract class AccumuloElement implements Element {
 
 	protected AccumuloGraph parent;
-	protected Type type;
 	protected Object id;
 	protected Text idRow;
 
-	protected AccumuloElement(AccumuloGraph parent,
-			Object id, Type type) {
+	protected AccumuloElement(AccumuloGraph parent, Object id) {
 		this.parent = parent;
-		this.type = type;
 
 		if (id == null) {
 			id = Utils.makeId();
 		}
 
 		this.id = id;
-		this.idRow = Utils.typedObjectToText(type, id);
+		this.idRow = Utils.elementIdToText(id);
 	}
 
 	@Override
@@ -128,7 +123,6 @@ public abstract class AccumuloElement implements Element {
 		int result = 1;
 		result = prime * result + ((id == null) ? 0 : id.hashCode());
 		result = prime * result + ((idRow == null) ? 0 : idRow.hashCode());
-		result = prime * result + ((type == null) ? 0 : type.hashCode());
 		return result;
 	}
 
@@ -150,8 +144,6 @@ public abstract class AccumuloElement implements Element {
 			if (other.idRow != null)
 				return false;
 		} else if (!idRow.equals(other.idRow))
-			return false;
-		if (type != other.type)
 			return false;
 		return true;
 	}

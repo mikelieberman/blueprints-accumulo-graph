@@ -5,8 +5,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
@@ -24,8 +22,6 @@ import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Mutation;
 import org.apache.accumulo.core.data.Value;
 import org.apache.hadoop.io.Text;
-
-import accumulograph.Const.Type;
 
 /**
  * Various utility methods.
@@ -76,19 +72,13 @@ public final class Utils {
 	public static <T> T valueToObject(Value value) {
 		return fromBytes(value.get());
 	}
-
-	public static <T> Text typedObjectToText(Type type, T obj) {
-		byte[] bytes = toBytes(obj);
-		ByteBuffer buffer = ByteBuffer.allocate(1 + bytes.length);
-		buffer.put((byte) type.ordinal());
-		buffer.put(bytes);
-		return new Text(buffer.array());
+	
+	public static <T> Text elementIdToText(T id) {
+		return new Text(toBytes(id));
 	}
-
-	public static <T> T textToTypedObject(Text text) {
-		byte[] bytes = text.getBytes();
-		// Read past type code at beginning.
-		return fromBytes(Arrays.copyOfRange(bytes, 1, bytes.length));
+	
+	public static <T> T textToElementId(Text text) {
+		return fromBytes(text.getBytes());
 	}
 
 	public static Value textToValue(Text text) {

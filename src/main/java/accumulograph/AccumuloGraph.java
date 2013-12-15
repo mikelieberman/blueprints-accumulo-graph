@@ -21,8 +21,6 @@ import org.apache.accumulo.core.data.Value;
 import org.apache.commons.configuration.Configuration;
 import org.apache.hadoop.io.Text;
 
-import accumulograph.Const.Type;
-
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Element;
@@ -184,7 +182,7 @@ public class AccumuloGraph implements KeyIndexableGraph {
 			throw new IllegalArgumentException("Id cannot be null");
 		}
 
-		return containsElement(Type.VERTEX_ID, id) ? new AccumuloVertex(this, id) : null;
+		return containsElement(id) ? new AccumuloVertex(this, id) : null;
 	}
 
 	@Override
@@ -248,7 +246,7 @@ public class AccumuloGraph implements KeyIndexableGraph {
 					}
 
 					private AccumuloVertex makeVertex(Text id) {
-						return new AccumuloVertex(parent, Utils.textToTypedObject(id));						
+						return new AccumuloVertex(parent, Utils.textToElementId(id));						
 					}
 
 				};
@@ -280,8 +278,8 @@ public class AccumuloGraph implements KeyIndexableGraph {
 		// Add the edge and its information.
 		Mutation m = new Mutation(edge.getIdRow());
 		m.put(Const.EDGE_TYPE, Utils.stringToText(label), Const.EMPTY_VALUE);
-		m.put(Const.EDGE_OUT_VERTEX, Utils.typedObjectToText(Type.VERTEX_ID, out.getId()), Const.EMPTY_VALUE);
-		m.put(Const.EDGE_IN_VERTEX, Utils.typedObjectToText(Type.VERTEX_ID, in.getId()), Const.EMPTY_VALUE);
+		m.put(Const.EDGE_OUT_VERTEX, Utils.elementIdToText(out.getId()), Const.EMPTY_VALUE);
+		m.put(Const.EDGE_IN_VERTEX, Utils.elementIdToText(in.getId()), Const.EMPTY_VALUE);
 		Utils.addMutation(writer, m);
 
 		// Add to edge list.
@@ -314,7 +312,7 @@ public class AccumuloGraph implements KeyIndexableGraph {
 			throw new IllegalArgumentException("Id cannot be null.");
 		}
 
-		return containsElement(Type.EDGE_ID, id) ? new AccumuloEdge(this, id) : null;
+		return containsElement(id) ? new AccumuloEdge(this, id) : null;
 	}
 
 	@Override
@@ -384,7 +382,7 @@ public class AccumuloGraph implements KeyIndexableGraph {
 					}
 
 					private AccumuloEdge makeEdge(Text id) {
-						return new AccumuloEdge(parent, Utils.textToTypedObject(id));
+						return new AccumuloEdge(parent, Utils.textToElementId(id));
 					}
 
 				};
@@ -433,8 +431,8 @@ public class AccumuloGraph implements KeyIndexableGraph {
 		return getClass().getSimpleName().toLowerCase()+":"+opts.getGraphTable();
 	}
 
-	protected boolean containsElement(Type type, Object id) {
-		scanner.setRange(new Range(Utils.typedObjectToText(type, id)));
+	protected boolean containsElement(Object id) {
+		scanner.setRange(new Range(Utils.elementIdToText(id)));
 		return Utils.firstEntry(scanner) != null;
 	}
 

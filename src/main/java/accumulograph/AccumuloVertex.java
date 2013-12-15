@@ -10,8 +10,6 @@ import org.apache.accumulo.core.data.Range;
 import org.apache.accumulo.core.data.Value;
 import org.apache.hadoop.io.Text;
 
-import accumulograph.Const.Type;
-
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Vertex;
@@ -25,7 +23,7 @@ import com.tinkerpop.blueprints.util.DefaultVertexQuery;
 public class AccumuloVertex extends AccumuloElement implements Vertex {
 
 	public AccumuloVertex(AccumuloGraph parent, Object id) {
-		super(parent, id, Type.VERTEX_ID);
+		super(parent, id);
 	}
 
 	@Override
@@ -101,7 +99,7 @@ public class AccumuloVertex extends AccumuloElement implements Vertex {
 						next.getKey().getColumnQualifier(cq);
 						next = null;
 
-						current = new AccumuloEdge(parent, Utils.textToTypedObject(cq));
+						current = new AccumuloEdge(parent, Utils.textToElementId(cq));
 						return current;
 					}
 
@@ -229,7 +227,7 @@ public class AccumuloVertex extends AccumuloElement implements Vertex {
 					public Vertex next() {
 						loadMore();
 						current = new AccumuloVertex(parent,
-								Utils.textToTypedObject(rowIds.remove()));
+								Utils.textToElementId(rowIds.remove()));
 						return current;
 					}
 

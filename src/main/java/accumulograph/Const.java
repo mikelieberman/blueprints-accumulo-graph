@@ -30,9 +30,6 @@ public final class Const {
 	public static final String USE_PROPERTY_CACHE =
 			"usePropertyCache";
 
-	// Types of Accumulo records.
-	public static enum Type {METADATA, VERTEX_ID, EDGE_ID, VERTEX_PROPERTY, EDGE_PROPERTY};
-
 	// Vertex-related.
 	public static final Text VERTEX_TYPE = new Text("MVERTEX");
 	public static final Text VERTEX_OUT_EDGE = new Text("EOUT");
