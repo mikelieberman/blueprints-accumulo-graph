@@ -177,8 +177,8 @@ public class AccumuloGraph implements KeyIndexableGraph {
 			throw new IllegalArgumentException("Id cannot be null");
 		}
 
-		AccumuloElementId eid = new AccumuloElementId(id);
-		return containsElement(eid, ElementType.VERTEX) ? new AccumuloVertex(this, eid) : null;
+		Iterator<Vertex> i = getVerticesInRange(id, id).iterator();
+		return i.hasNext() ? i.next() : null;
 	}
 
 	@Override
@@ -228,18 +228,18 @@ public class AccumuloGraph implements KeyIndexableGraph {
 				if (minId == null) {
 					minKey = new Key(AccumuloIdManager.toIdPrefix(ElementType.VERTEX));
 				} else {
-					minKey = new Key(AccumuloIdManager.toIdPrefix(ElementType.VERTEX),
-							AccumuloIdManager.toText(
-									new AccumuloElementId(minId), ElementType.VERTEX));
+					minKey = new Key(AccumuloIdManager.toText(
+									new AccumuloElementId(minId), ElementType.VERTEX),
+									Const.VERTEX_SIGNAL);
 				}
 
 				Key maxKey;
 				if (maxId == null) {
 					maxKey = new Key(AccumuloIdManager.afterIdPrefix(ElementType.VERTEX));
 				} else {
-					maxKey = new Key(AccumuloIdManager.toIdPrefix(ElementType.VERTEX),
-							AccumuloIdManager.toText(
-									new AccumuloElementId(maxId), ElementType.VERTEX));
+					maxKey = new Key(AccumuloIdManager.toText(
+									new AccumuloElementId(maxId), ElementType.VERTEX),
+									Const.VERTEX_SIGNAL_AFTER);
 				}
 
 				scanner.setRange(new Range(minKey, maxKey));
@@ -332,8 +332,8 @@ public class AccumuloGraph implements KeyIndexableGraph {
 			throw new IllegalArgumentException("Id cannot be null.");
 		}
 
-		AccumuloElementId eid = new AccumuloElementId(id);
-		return containsElement(eid, ElementType.EDGE) ? new AccumuloEdge(this, eid) : null;
+		Iterator<Edge> i = getEdgesInRange(id, id).iterator();
+		return i.hasNext() ? i.next() : null;
 	}
 
 	@Override
@@ -388,16 +388,18 @@ public class AccumuloGraph implements KeyIndexableGraph {
 				if (minId == null) {
 					minKey = new Key(AccumuloIdManager.toIdPrefix(ElementType.EDGE));
 				} else {
-					minKey = new Key(AccumuloIdManager.toIdPrefix(ElementType.EDGE),
-							AccumuloIdManager.toText(new AccumuloElementId(minId), ElementType.EDGE));
+					minKey = new Key(AccumuloIdManager.toText(
+									new AccumuloElementId(minId), ElementType.EDGE),
+									Const.EDGE_SIGNAL);
 				}
 
 				Key maxKey;
 				if (maxId == null) {
 					maxKey = new Key(AccumuloIdManager.afterIdPrefix(ElementType.EDGE));
 				} else {
-					maxKey = new Key(AccumuloIdManager.toIdPrefix(ElementType.EDGE),
-							AccumuloIdManager.toText(new AccumuloElementId(maxId), ElementType.EDGE));
+					maxKey = new Key(AccumuloIdManager.toText(
+									new AccumuloElementId(maxId), ElementType.EDGE),
+									Const.EDGE_SIGNAL_AFTER);
 				}
 
 				scanner.setRange(new Range(minKey, maxKey));
@@ -475,11 +477,6 @@ public class AccumuloGraph implements KeyIndexableGraph {
 	@Override
 	public String toString() {
 		return getClass().getSimpleName().toLowerCase()+":"+opts.getGraphTable();
-	}
-
-	protected boolean containsElement(AccumuloElementId id, ElementType type) {
-		scanner.setRange(new Range(AccumuloIdManager.toText(id, type)));
-		return Utils.firstEntry(scanner) != null;
 	}
 
 	@Override

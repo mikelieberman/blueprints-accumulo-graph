@@ -40,6 +40,7 @@ public final class Const {
 	public static final String VERTEX_ID_PREFIX_AFTER = "W";
 
 	public static final Text VERTEX_SIGNAL = new Text("MVERTEX");
+	public static final Text VERTEX_SIGNAL_AFTER = new Text("MVERTEY");
 	public static final Text VERTEX_OUT_EDGE = new Text("EOUT");
 	public static final Text VERTEX_IN_EDGE = new Text("EIN");
 
@@ -49,6 +50,7 @@ public final class Const {
 	public static final String EDGE_ID_PREFIX_AFTER = "F";
 
 	public static final Text EDGE_SIGNAL = new Text("MEDGE");
+	public static final Text EDGE_SIGNAL_AFTER = new Text("MEDGF");
 	public static final Text EDGE_OUT_VERTEX = new Text("VOUT");
 	public static final Text EDGE_IN_VERTEX = new Text("VIN");
 
