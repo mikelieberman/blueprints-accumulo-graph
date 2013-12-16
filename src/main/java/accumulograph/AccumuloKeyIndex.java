@@ -24,6 +24,10 @@ import org.apache.hadoop.io.Text;
 /**
  * Key index implementation.  The key index is stored in
  * a separate table, specified using options.
+ * 
+ * TODO Make this faster by prefixing property rows as appropriate
+ * (V/E) and then use Utils.deleteRow() to speedily drop indexed keys.
+ * 
  * @author Mike Lieberman (http://mikelieberman.org)
  */
 public class AccumuloKeyIndex {

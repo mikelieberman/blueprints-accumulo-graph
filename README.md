@@ -79,8 +79,7 @@ TODO
 * Hadoop integration.
 * Read-only usage.  This will enforce only read operations, and would
   allow caching strategies, and avoid timing issues.
-* Element/property cache, to increase performance for read-only
-  usage.
+* Element/property cache, to increase performance for read-only usage.
 * Bulk loading of graph elements.
 * Regular-style indexes, in addition to key/value index.
 * Tuned querying.
