@@ -21,6 +21,8 @@ import org.apache.accumulo.core.data.Range;
 import org.apache.accumulo.core.data.Value;
 import org.apache.hadoop.io.Text;
 
+import com.tinkerpop.blueprints.Element;
+
 /**
  * Key index implementation.  The key index is stored in
  * a separate table, specified using options.
@@ -75,20 +77,19 @@ public class AccumuloKeyIndex {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	public <T extends AccumuloElement> void createKeyIndex(String key, Class<T> elementClass) {
 		Set<String> indexedKeys;
-		Iterable<T> elements;
+		Iterable<? extends Element> elements;
 		Text propertyList;
 
 		if (elementClass.equals(AccumuloVertex.class)) {
 			indexedKeys = indexedVertexKeys;
-			elements = (Iterable<T>) parent.getVertices();
+			elements = parent.getVertices();
 			propertyList = Const.VERTEX_PROPERTY_LIST;
 		}
 		else {
 			indexedKeys = indexedEdgeKeys;
-			elements = (Iterable<T>) parent.getEdges();
+			elements = parent.getEdges();
 			propertyList = Const.EDGE_PROPERTY_LIST;
 		}
 
@@ -105,8 +106,8 @@ public class AccumuloKeyIndex {
 		reloadIndexedKeys();
 
 		// Find elements and do stuff.
-		for (AccumuloElement element : elements) {
-			addOrRemoveFromIndex(element, true);
+		for (Element element : elements) {
+			addOrRemoveFromIndex((AccumuloElement) element, true);
 		}
 	}
 
