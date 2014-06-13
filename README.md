@@ -1,3 +1,7 @@
+**NOTE: This code is no longer maintained.
+See https://github.com/JHUAPL/AccumuloGraph for a
+newer implementation.**
+
 Blueprints for Accumulo
 =======================
 
